@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="ChronoFlow.Api/ChronoFlow.Api.csproj" />
+  <Project Path="ChronoFlow.Core/ChronoFlow.Core.csproj" />
+  <Project Path="ChronoFlow.Infrastructure/ChronoFlow.Infrastructure.csproj" />
+  <Project Path="ChronoFlow.Modules.Identity/ChronoFlow.Modules.Identity.csproj" />
+  <Project Path="ChronoFlow.Tests/ChronoFlow.Tests.csproj" />
+</Solution>

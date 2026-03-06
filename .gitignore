@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# .NET build folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# Rider / JetBrains
+.idea/
+
+# Environment files
+.env
+.env.*

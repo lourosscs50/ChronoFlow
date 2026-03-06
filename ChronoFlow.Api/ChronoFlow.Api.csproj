@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>cae885c5-af6e-41b7-bf77-7e6f3a498a32</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0-preview.7.25380.108">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0-preview.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.14.28" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.28" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChronoFlow.Core\ChronoFlow.Core.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Infrastructure\ChronoFlow.Infrastructure.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Modules.Identity\ChronoFlow.Modules.Identity.csproj" />
+  </ItemGroup>
+
+</Project>
