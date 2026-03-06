@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ChronoFlow.Api\ChronoFlow.Api.csproj" />
     <ProjectReference Include="..\ChronoFlow.Modules.Identity\ChronoFlow.Modules.Identity.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Modules.Events\ChronoFlow.Modules.Events\ChronoFlow.Modules.Events.csproj" />
   </ItemGroup>
 
 </Project>

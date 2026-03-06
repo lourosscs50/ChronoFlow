@@ -9,6 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 using ChronoFlow.Modules.Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using ChronoFlow.Api.Security;
+using ChronoFlow.Api.Endpoints;
+using ChronoFlow.Modules.Events.Application;
+using ChronoFlow.Modules.Events.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,15 +51,24 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Identity module services
+var eventsConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
+
+builder.Services.AddDbContext<EventsDbContext>(options =>
+    options.UseNpgsql(eventsConnectionString));
+builder.Services.AddScoped<IEventRepository, EfEventRepository>();
+builder.Services.AddScoped<IngestEventHandler>();
 builder.Services.AddDbContext<IdentityDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ChronoFlowDb")));
+    options.UseNpgsql(eventsConnectionString));
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ChronoFlow.Api.Security.ICurrentUser, ChronoFlow.Api.Security.HttpContextCurrentUser>();
 
+
 var app = builder.Build();
+app.MapEventsEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

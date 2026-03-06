@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/ChronoFlow.Modules.Events/">
+    <Project Path="ChronoFlow.Modules.Events/ChronoFlow.Modules.Events/ChronoFlow.Modules.Events.csproj" />
+  </Folder>
   <Project Path="ChronoFlow.Api/ChronoFlow.Api.csproj" />
   <Project Path="ChronoFlow.Core/ChronoFlow.Core.csproj" />
   <Project Path="ChronoFlow.Infrastructure/ChronoFlow.Infrastructure.csproj" />
