@@ -129,3 +129,5 @@ app.MapGet("/me", (ICurrentUser currentUser) =>
 .RequireAuthorization();
 
 app.Run();
+
+public partial class Program { }
