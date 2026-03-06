@@ -68,6 +68,44 @@ public sealed class AuthEndpointsTests : IClassFixture<WebApplicationFactory<Pro
         Assert.NotEqual(Guid.Empty, meBody.UserId);
     }
 
+    [Fact]
+    public async Task Login_With_Wrong_Password_Returns_Unauthorized()
+    {
+        var client = _factory.CreateClient();
+
+        var email = $"test-{Guid.NewGuid():N}@chronoflow.dev";
+        const string password = "Password123!";
+
+        var registerResponse = await client.PostAsJsonAsync("/auth/register", new
+        {
+            email,
+            password
+        });
+
+        registerResponse.EnsureSuccessStatusCode();
+
+        var loginResponse = await client.PostAsJsonAsync("/auth/login", new
+        {
+            email,
+            password = "WrongPassword123!"
+
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+        [Fact]
+        public async Task Me_With_Invalid_Token_Returns_Unauthorized()
+        {
+            var client = _factory.CreateClient();
+
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", "not-a-real-token");
+
+            var response = await client.GetAsync("/me");
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
     private sealed record LoginResponse(string Token);
     private sealed record MeResponse(Guid UserId, string Email);
-}
+        }
+
