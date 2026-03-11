@@ -58,14 +58,15 @@ builder.Services.AddDbContext<EventsDbContext>(options =>
     options.UseNpgsql(eventsConnectionString));
 builder.Services.AddScoped<IEventRepository, EfEventRepository>();
 builder.Services.AddScoped<IngestEventHandler>();
+builder.Services.AddScoped<GetEventHandler>();
+builder.Services.AddScoped<GetStreamEventsHandler>();
 builder.Services.AddDbContext<IdentityDbContext>(options =>
     options.UseNpgsql(eventsConnectionString));
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ChronoFlow.Api.Security.ICurrentUser, ChronoFlow.Api.Security.HttpContextCurrentUser>();
-
+builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
 var app = builder.Build();
 app.MapEventsEndpoints();
