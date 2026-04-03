@@ -6,11 +6,11 @@ using Xunit;
 
 namespace ChronoFlow.Tests.Api;
 
-public sealed class AuthEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class AuthEndpointsTests : IClassFixture<ChronoFlowApiIntegrationTestFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly ChronoFlowApiIntegrationTestFactory _factory;
 
-    public AuthEndpointsTests(WebApplicationFactory<Program> factory)
+    public AuthEndpointsTests(ChronoFlowApiIntegrationTestFactory factory)
     {
         _factory = factory;
     }
@@ -93,19 +93,20 @@ public sealed class AuthEndpointsTests : IClassFixture<WebApplicationFactory<Pro
         Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
     }
 
-        [Fact]
-        public async Task Me_With_Invalid_Token_Returns_Unauthorized()
-        {
-            var client = _factory.CreateClient();
+    [Fact]
+    public async Task Me_With_Invalid_Token_Returns_Unauthorized()
+    {
+        var client = _factory.CreateClient();
 
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", "not-a-real-token");
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", "not-a-real-token");
 
-            var response = await client.GetAsync("/me");
+        var response = await client.GetAsync("/me");
 
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        }
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private sealed record LoginResponse(string Token);
     private sealed record MeResponse(Guid UserId, string Email);
-        }
+}
 

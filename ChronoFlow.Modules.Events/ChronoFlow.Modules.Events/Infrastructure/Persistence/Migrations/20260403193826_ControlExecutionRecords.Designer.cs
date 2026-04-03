@@ -3,6 +3,7 @@ using System;
 using ChronoFlow.Modules.Events.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EventsDbContext))]
-    partial class EventsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260403193826_ControlExecutionRecords")]
+    partial class ControlExecutionRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,21 +37,6 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("AlertId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("AdvisoryConfidence")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("AdvisoryReasonSummary")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("AdvisoryStrategyKey")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("AdvisoryWasUsed")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("CurrentStatus")
                         .IsRequired()

@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0-preview.7.25380.108" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0-preview.7.25380.108" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0-preview.7.25380.108">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\ChronoFlow.Infrastructure\ChronoFlow.Infrastructure.csproj" />
     <ProjectReference Include="..\ChronoFlow.Modules.Identity\ChronoFlow.Modules.Identity.csproj" />
     <ProjectReference Include="..\ChronoFlow.Modules.Events\ChronoFlow.Modules.Events\ChronoFlow.Modules.Events.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Modules.ControlTriggers\ChronoFlow.Modules.ControlTriggers.csproj" />
   </ItemGroup>
 
 </Project>

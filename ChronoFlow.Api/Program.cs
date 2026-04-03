@@ -8,10 +8,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using ChronoFlow.Modules.Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using ChronoFlow.Api.Options;
 using ChronoFlow.Api.Security;
 using ChronoFlow.Api.Endpoints;
+using ChronoFlow.Modules.ControlTriggers.Application;
 using ChronoFlow.Modules.Events.Application;
 using ChronoFlow.Modules.Events.Infrastructure.Persistence;
+using ChronoFlow.Infrastructure.ControlTriggers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,14 +57,40 @@ builder.Services.AddAuthorization(options =>
 var eventsConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 
-builder.Services.AddDbContext<EventsDbContext>(options =>
-    options.UseNpgsql(eventsConnectionString));
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    var eventsTestDb = builder.Configuration["Testing:EventsInMemoryDatabase"]
+                       ?? "chronoflow-events-testing";
+    builder.Services.AddDbContext<EventsDbContext>(options =>
+        options.UseInMemoryDatabase(eventsTestDb));
+
+    var identityTestDb = builder.Configuration["Testing:IdentityInMemoryDatabase"]
+                         ?? "chronoflow-identity-testing";
+    builder.Services.AddDbContext<IdentityDbContext>(options =>
+        options.UseInMemoryDatabase(identityTestDb));
+}
+else
+{
+    builder.Services.AddDbContext<EventsDbContext>(options =>
+        options.UseNpgsql(eventsConnectionString));
+    builder.Services.AddDbContext<IdentityDbContext>(options =>
+        options.UseNpgsql(eventsConnectionString));
+}
 builder.Services.AddScoped<IEventRepository, EfEventRepository>();
+builder.Services.AddScoped<IControlExecutionRecordRepository, EfControlExecutionRecordRepository>();
+builder.Services.AddScoped<ListControlExecutions.Handler>();
+builder.Services.AddScoped<GetControlExecutionById.Handler>();
 builder.Services.AddScoped<IngestEventHandler>();
 builder.Services.AddScoped<GetEventHandler>();
 builder.Services.AddScoped<GetStreamEventsHandler>();
-builder.Services.AddDbContext<IdentityDbContext>(options =>
-    options.UseNpgsql(eventsConnectionString));
+builder.Services.Configure<ControlTriggersIntakeOptions>(
+    builder.Configuration.GetSection(ControlTriggersIntakeOptions.SectionName));
+builder.Services.AddControlTriggerAdvisoryIntegration(builder.Configuration);
+builder.Services.AddSingleton<IProcessedTriggerStore, InMemoryProcessedTriggerStore>();
+builder.Services.AddSingleton<IControlTriggerDeduplicator, DefaultControlTriggerDeduplicator>();
+builder.Services.AddSingleton<IControlTriggerRouter, DefaultControlTriggerRouter>();
+builder.Services.AddSingleton<IWorkflowExecutor, LoggingWorkflowExecutor>();
+builder.Services.AddScoped<ReceiveControlTriggerHandler>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<AuthService>();
@@ -70,6 +99,8 @@ builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
 var app = builder.Build();
 app.MapEventsEndpoints();
+app.MapControlTriggersEndpoints();
+app.MapControlExecutionsEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

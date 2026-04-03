@@ -6,11 +6,11 @@ using Xunit;
 
 namespace ChronoFlow.Tests.Api;
 
-public sealed class EventsEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class EventsEndpointsTests : IClassFixture<ChronoFlowApiIntegrationTestFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly ChronoFlowApiIntegrationTestFactory _factory;
 
-    public EventsEndpointsTests(WebApplicationFactory<Program> factory)
+    public EventsEndpointsTests(ChronoFlowApiIntegrationTestFactory factory)
     {
         _factory = factory;
     }

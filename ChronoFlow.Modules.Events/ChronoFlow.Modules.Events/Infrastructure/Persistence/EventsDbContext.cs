@@ -1,3 +1,4 @@
+using ChronoFlow.Modules.ControlTriggers.Domain;
 using ChronoFlow.Modules.Events.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,9 +12,12 @@ public sealed class EventsDbContext : DbContext
 
     public DbSet<EventRecord> Events => Set<EventRecord>();
 
+    public DbSet<ControlExecutionRecord> ControlExecutionRecords => Set<ControlExecutionRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new EventEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ControlExecutionRecordEntityConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }

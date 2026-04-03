@@ -1,7 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0-preview.7.25380.108" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ChronoFlow.Core\ChronoFlow.Core.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Modules.ControlTriggers\ChronoFlow.Modules.ControlTriggers.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

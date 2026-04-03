@@ -19,12 +19,15 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0-preview.7.25380.108" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ChronoFlow.Api\ChronoFlow.Api.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Infrastructure\ChronoFlow.Infrastructure.csproj" />
     <ProjectReference Include="..\ChronoFlow.Modules.Identity\ChronoFlow.Modules.Identity.csproj" />
     <ProjectReference Include="..\ChronoFlow.Modules.Events\ChronoFlow.Modules.Events\ChronoFlow.Modules.Events.csproj" />
+    <ProjectReference Include="..\ChronoFlow.Modules.ControlTriggers\ChronoFlow.Modules.ControlTriggers.csproj" />
   </ItemGroup>
 
 </Project>
