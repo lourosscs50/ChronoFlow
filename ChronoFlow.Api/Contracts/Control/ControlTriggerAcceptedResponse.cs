@@ -9,4 +9,5 @@ public sealed record ControlTriggerAcceptedResponse(
     [property: JsonPropertyName("suppressionReason")] string? SuppressionReason,
     [property: JsonPropertyName("workflowKey")] string? WorkflowKey,
     [property: JsonPropertyName("executedStepCount")] int ExecutedStepCount,
-    [property: JsonPropertyName("executionRecordId")] Guid? ExecutionRecordId);
+    [property: JsonPropertyName("executionRecordId")] Guid? ExecutionRecordId,
+    [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId = null);

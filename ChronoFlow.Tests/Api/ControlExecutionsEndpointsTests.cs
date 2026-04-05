@@ -43,6 +43,8 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
         Assert.NotNull(accepted?.ExecutionRecordId);
         var recordId = accepted!.ExecutionRecordId!.Value;
+        Assert.NotNull(accepted.ExecutionInstanceId);
+        var executionInstanceId = accepted.ExecutionInstanceId!.Value;
 
         var detailResponse = await client.GetAsync($"/control/executions/{recordId}");
         detailResponse.EnsureSuccessStatusCode();
@@ -58,6 +60,8 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.NotNull(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
         Assert.Null(detail.AdvisoryStrategyKey);
+        Assert.Equal(executionInstanceId, detail.ExecutionInstanceId);
+        Assert.NotEqual(detail.Id, detail.ExecutionInstanceId);
 
         var listResponse = await client.GetAsync(
             $"/control/executions?alertId={alertId}&wasExecuted=true");
@@ -92,6 +96,7 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Equal(0, detail.ExecutedStepCount);
         Assert.Null(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
+        Assert.Null(detail.ExecutionInstanceId);
     }
 
     [Fact]
@@ -118,6 +123,7 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Equal(0, detail.ExecutedStepCount);
         Assert.Null(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
+        Assert.Null(detail.ExecutionInstanceId);
     }
 
     private static ReceiveControlTriggerRequest TriggersBody(Guid alertId) =>

@@ -39,6 +39,8 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
         Assert.Equal(
             ["EvaluateTrigger", "InitializeWorkflowContext", "RecordExecution"],
             recorder.StepNamesInOrder);
+        Assert.NotEqual(Guid.Empty, result.ExecutionInstanceId);
+        Assert.Equal(result.ExecutionInstanceId, recorder.LastExecutionInstanceId);
     }
 
     [Fact]
@@ -72,6 +74,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
         Assert.False(result.WasSuppressed);
         Assert.Null(result.WorkflowKey);
         Assert.Equal(0, result.ExecutedStepCount);
+        Assert.Null(result.ExecutionInstanceId);
         Assert.Empty(recorder.StepNamesInOrder);
     }
 
@@ -87,6 +90,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
         Assert.True(result.Accepted);
         Assert.False(result.WasExecuted);
         Assert.False(result.WasSuppressed);
+        Assert.Null(result.ExecutionInstanceId);
         Assert.Empty(recorder.StepNamesInOrder);
     }
 
@@ -102,6 +106,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
         Assert.True(result.Accepted);
         Assert.False(result.WasExecuted);
         Assert.False(result.WasSuppressed);
+        Assert.Null(result.ExecutionInstanceId);
         Assert.Empty(recorder.StepNamesInOrder);
     }
 
@@ -117,6 +122,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
 
         Assert.True(result.WasExecuted);
         Assert.Equal(99, result.ExecutedStepCount);
+        Assert.NotEqual(Guid.Empty, result.ExecutionInstanceId);
     }
 
     private static ReceiveControlTriggerCommand ValidCommand(string triggerType, string lifecycle) =>
@@ -138,16 +144,20 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
     {
         public List<string> StepNamesInOrder { get; } = [];
 
+        public Guid LastExecutionInstanceId { get; private set; }
+
         public Task<WorkflowExecutionResult> ExecuteAsync(
+            Guid executionInstanceId,
             WorkflowDefinition definition,
             ReceiveControlTriggerCommand trigger,
             CancellationToken cancellationToken = default)
         {
             _ = trigger;
             _ = cancellationToken;
+            LastExecutionInstanceId = executionInstanceId;
             foreach (var step in definition.Steps.OrderBy(s => s.Order))
                 StepNamesInOrder.Add(step.StepName);
-            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count));
+            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count, executionInstanceId));
         }
     }
 
@@ -161,6 +171,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
     private sealed class FixedCountWorkflowExecutor(int executedStepCount) : IWorkflowExecutor
     {
         public Task<WorkflowExecutionResult> ExecuteAsync(
+            Guid executionInstanceId,
             WorkflowDefinition definition,
             ReceiveControlTriggerCommand trigger,
             CancellationToken cancellationToken = default)
@@ -168,7 +179,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
             _ = definition;
             _ = trigger;
             _ = cancellationToken;
-            return Task.FromResult(new WorkflowExecutionResult(executedStepCount));
+            return Task.FromResult(new WorkflowExecutionResult(executedStepCount, executionInstanceId));
         }
     }
 }

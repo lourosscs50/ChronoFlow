@@ -4,6 +4,9 @@ namespace ChronoFlow.Modules.ControlTriggers.Domain;
 public sealed class ControlExecutionRecord
 {
     public Guid Id { get; init; }
+
+    /// <summary>Authoritative id for a single workflow execution instance; set only when execution starts; distinct from <see cref="Id"/>.</summary>
+    public Guid? ExecutionInstanceId { get; init; }
     public string TriggerType { get; init; } = "";
     public string LifecycleEventType { get; init; } = "";
     public Guid AlertId { get; init; }

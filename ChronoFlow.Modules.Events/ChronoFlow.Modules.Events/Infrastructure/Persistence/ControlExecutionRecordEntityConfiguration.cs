@@ -33,5 +33,6 @@ public sealed class ControlExecutionRecordEntityConfiguration : IEntityTypeConfi
         builder.HasIndex(x => x.WasExecuted);
         builder.HasIndex(x => x.WasSuppressed);
         builder.HasIndex(x => x.WorkflowKey);
+        builder.HasIndex(x => x.ExecutionInstanceId);
     }
 }

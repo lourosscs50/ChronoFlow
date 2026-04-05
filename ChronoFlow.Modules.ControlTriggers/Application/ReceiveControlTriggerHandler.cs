@@ -83,11 +83,15 @@ public sealed class ReceiveControlTriggerHandler(
             return ReceiveControlTriggerResult.OkNotExecuted(noWorkflowRecord.Id);
         }
 
-        var execution = await executor.ExecuteAsync(definition, command, cancellationToken).ConfigureAwait(false);
+        var executionInstanceId = Guid.NewGuid();
+        var execution = await executor
+            .ExecuteAsync(executionInstanceId, definition, command, cancellationToken)
+            .ConfigureAwait(false);
         var executedAtUtc = DateTimeOffset.UtcNow;
         var executedRecord = ControlExecutionRecordFactory.CreateExecuted(
             command,
             definition.WorkflowKey,
+            executionInstanceId,
             execution.ExecutedStepCount,
             receivedAtUtc,
             executedAtUtc,
@@ -97,7 +101,8 @@ public sealed class ReceiveControlTriggerHandler(
         return ReceiveControlTriggerResult.OkExecuted(
             definition.WorkflowKey,
             execution.ExecutedStepCount,
-            executedRecord.Id);
+            executedRecord.Id,
+            executionInstanceId);
     }
 
     private static AdvisoryExecutionSnapshot ToAdvisorySnapshot(ControlAdvisoryOutcome? outcome)

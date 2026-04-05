@@ -24,6 +24,7 @@ public sealed class AdvisoryControlTriggersApiTests
         Assert.True(accepted!.WasExecuted);
         Assert.Equal("alert-created-memory-informed", accepted.WorkflowKey);
         Assert.NotNull(accepted.ExecutionRecordId);
+        Assert.NotNull(accepted.ExecutionInstanceId);
 
         var detail = await client.GetFromJsonAsync<ControlExecutionRecordResponse>(
             $"/control/executions/{accepted.ExecutionRecordId}");
@@ -32,6 +33,7 @@ public sealed class AdvisoryControlTriggersApiTests
         Assert.Equal(AdvisoryStrategyKeys.MemoryInformed, detail.AdvisoryStrategyKey);
         Assert.Equal("High", detail.AdvisoryConfidence);
         Assert.Equal("memory hint", detail.AdvisoryReasonSummary);
+        Assert.Equal(accepted.ExecutionInstanceId, detail.ExecutionInstanceId);
     }
 
     private static ReceiveControlTriggerRequest ValidBody(Guid alertId) =>

@@ -33,8 +33,10 @@ public sealed class LoggingWorkflowExecutorTests
             null,
             false);
 
-        var result = await sut.ExecuteAsync(definition, trigger, CancellationToken.None);
+        var executionInstanceId = Guid.Parse("e1000000-0000-4000-8000-000000000001");
+        var result = await sut.ExecuteAsync(executionInstanceId, definition, trigger, CancellationToken.None);
 
         Assert.Equal(3, result.ExecutedStepCount);
+        Assert.Equal(executionInstanceId, result.ExecutionInstanceId);
     }
 }

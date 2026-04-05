@@ -127,6 +127,7 @@ public sealed class ReceiveControlTriggerHandlerAdvisoryTests
         Assert.Equal("alert-created-default", result.WorkflowKey);
         var row = repo.Records.Single(r => r.Id == result.ExecutionRecordId);
         Assert.False(row.AdvisoryWasUsed);
+        Assert.Equal(result.ExecutionInstanceId, row.ExecutionInstanceId);
     }
 
     [Fact]
@@ -146,6 +147,7 @@ public sealed class ReceiveControlTriggerHandlerAdvisoryTests
         Assert.Equal(AdvisoryStrategyKeys.DefaultSafe, row.AdvisoryStrategyKey);
         Assert.Equal("Medium", row.AdvisoryConfidence);
         Assert.Equal("reason text", row.AdvisoryReasonSummary);
+        Assert.Equal(result.ExecutionInstanceId, row.ExecutionInstanceId);
     }
 
     private static ReceiveControlTriggerCommand ValidCommand(string triggerType, string lifecycle) =>
@@ -166,13 +168,14 @@ public sealed class ReceiveControlTriggerHandlerAdvisoryTests
     private sealed class CountingWorkflowExecutor : IWorkflowExecutor
     {
         public Task<WorkflowExecutionResult> ExecuteAsync(
+            Guid executionInstanceId,
             WorkflowDefinition definition,
             ReceiveControlTriggerCommand trigger,
             CancellationToken cancellationToken = default)
         {
             _ = trigger;
             _ = cancellationToken;
-            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count));
+            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count, executionInstanceId));
         }
     }
 }

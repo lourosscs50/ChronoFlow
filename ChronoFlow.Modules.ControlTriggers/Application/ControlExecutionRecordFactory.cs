@@ -11,6 +11,7 @@ internal static class ControlExecutionRecordFactory
         new()
         {
             Id = Guid.NewGuid(),
+            ExecutionInstanceId = null,
             TriggerType = command.TriggerType,
             LifecycleEventType = command.LifecycleEventType,
             AlertId = command.AlertId,
@@ -41,6 +42,7 @@ internal static class ControlExecutionRecordFactory
         new()
         {
             Id = Guid.NewGuid(),
+            ExecutionInstanceId = null,
             TriggerType = command.TriggerType,
             LifecycleEventType = command.LifecycleEventType,
             AlertId = command.AlertId,
@@ -68,6 +70,7 @@ internal static class ControlExecutionRecordFactory
     public static ControlExecutionRecord CreateExecuted(
         ReceiveControlTriggerCommand command,
         string workflowKey,
+        Guid executionInstanceId,
         int executedStepCount,
         DateTimeOffset receivedAtUtc,
         DateTimeOffset executedAtUtc,
@@ -77,6 +80,7 @@ internal static class ControlExecutionRecordFactory
         return new()
         {
             Id = Guid.NewGuid(),
+            ExecutionInstanceId = executionInstanceId,
             TriggerType = command.TriggerType,
             LifecycleEventType = command.LifecycleEventType,
             AlertId = command.AlertId,

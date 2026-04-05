@@ -20,4 +20,5 @@ public sealed record ControlExecutionRecordResponse(
     [property: JsonPropertyName("advisoryWasUsed")] bool AdvisoryWasUsed,
     [property: JsonPropertyName("advisoryStrategyKey")] string? AdvisoryStrategyKey,
     [property: JsonPropertyName("advisoryConfidence")] string? AdvisoryConfidence,
-    [property: JsonPropertyName("advisoryReasonSummary")] string? AdvisoryReasonSummary);
+    [property: JsonPropertyName("advisoryReasonSummary")] string? AdvisoryReasonSummary,
+    [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId);

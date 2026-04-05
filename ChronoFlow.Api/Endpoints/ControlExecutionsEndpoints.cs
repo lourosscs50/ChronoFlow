@@ -90,5 +90,6 @@ public static class ControlExecutionsEndpoints
             x.AdvisoryWasUsed,
             x.AdvisoryStrategyKey,
             x.AdvisoryConfidence,
-            x.AdvisoryReasonSummary);
+            x.AdvisoryReasonSummary,
+            x.ExecutionInstanceId);
 }

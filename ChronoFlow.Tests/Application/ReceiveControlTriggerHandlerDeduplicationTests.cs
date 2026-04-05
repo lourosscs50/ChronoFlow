@@ -161,6 +161,7 @@ public sealed class ReceiveControlTriggerHandlerDeduplicationTests
         public int ExecuteCallCount { get; private set; }
 
         public Task<WorkflowExecutionResult> ExecuteAsync(
+            Guid executionInstanceId,
             WorkflowDefinition definition,
             ReceiveControlTriggerCommand trigger,
             CancellationToken cancellationToken = default)
@@ -168,7 +169,7 @@ public sealed class ReceiveControlTriggerHandlerDeduplicationTests
             _ = trigger;
             _ = cancellationToken;
             ExecuteCallCount++;
-            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count));
+            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count, executionInstanceId));
         }
     }
 }

@@ -56,6 +56,7 @@ public static class ControlTriggersEndpoints
                 result.SuppressionReason,
                 result.WorkflowKey,
                 result.ExecutedStepCount,
-                result.ExecutionRecordId));
+                result.ExecutionRecordId,
+                result.ExecutionInstanceId));
     }
 }

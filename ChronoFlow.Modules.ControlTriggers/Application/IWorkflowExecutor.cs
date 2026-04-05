@@ -6,6 +6,7 @@ namespace ChronoFlow.Modules.ControlTriggers.Application;
 public interface IWorkflowExecutor
 {
     Task<WorkflowExecutionResult> ExecuteAsync(
+        Guid executionInstanceId,
         WorkflowDefinition definition,
         ReceiveControlTriggerCommand trigger,
         CancellationToken cancellationToken = default);

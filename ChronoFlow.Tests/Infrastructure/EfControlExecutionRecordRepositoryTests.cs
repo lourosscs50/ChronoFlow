@@ -21,10 +21,12 @@ public sealed class EfControlExecutionRecordRepositoryTests
         }
 
         var id = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        var executionInstanceId = Guid.Parse("66666666-6666-6666-6666-666666666666");
         var alertId = Guid.Parse("55555555-5555-5555-5555-555555555555");
         var record = new ControlExecutionRecord
         {
             Id = id,
+            ExecutionInstanceId = executionInstanceId,
             TriggerType = "AlertCreated",
             LifecycleEventType = "AlertCreated",
             AlertId = alertId,
@@ -55,6 +57,7 @@ public sealed class EfControlExecutionRecordRepositoryTests
             Assert.Equal("alert-created-default", loaded!.WorkflowKey);
             Assert.True(loaded.WasExecuted);
             Assert.Equal(3, loaded.ExecutedStepCount);
+            Assert.Equal(executionInstanceId, loaded.ExecutionInstanceId);
 
             var list = await sut.ListAsync(
                 new ControlExecutionRecordQuery(alertId, null, null, null, null, 0, 10));
