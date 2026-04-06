@@ -244,6 +244,34 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
     }
 
     [Fact]
+    public async Task Approve_after_cancel_returns_409_with_finalized_message()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", ChronoFlowIntakeTestFactory.IntakeApiKey);
+
+        var body = TriggersBody(Guid.NewGuid()) with
+        {
+            InboundDecision = new InboundDecisionIntakeRequest(null, null, null, RequireReview, null)
+        };
+        var post = await client.PostAsJsonAsync("/control/triggers", body);
+        post.EnsureSuccessStatusCode();
+        var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
+        var recordId = accepted!.ExecutionRecordId!.Value;
+
+        var cancel = await client.PostAsJsonAsync(
+            $"/control/executions/{recordId}/cancel",
+            new OperatorReviewActionRequest());
+        cancel.EnsureSuccessStatusCode();
+
+        var approve = await client.PostAsJsonAsync(
+            $"/control/executions/{recordId}/approve",
+            new OperatorReviewActionRequest());
+        Assert.Equal(HttpStatusCode.Conflict, approve.StatusCode);
+        var text = await approve.Content.ReadAsStringAsync();
+        Assert.Contains("already recorded", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Approve_on_non_pending_record_returns_409()
     {
         var client = _factory.CreateClient();

@@ -64,7 +64,7 @@ public sealed class ControlExecutionRecord
     /// <summary>Orchestration policy outcome at intake (e.g. proceed, policy_suppressed); null for legacy rows or duplicate suppression path.</summary>
     public string? OrchestrationPolicyOutcome { get; init; }
 
-    /// <summary>Operator review resolution when a pending-review record was acted on; null until Phase 5 action.</summary>
+    /// <summary>Operator review resolution when a pending-review record was acted on; null until Phase 5 action. When set, Phase 6 disallows further review actions.</summary>
     public string? OperatorReviewAction { get; init; }
 
     /// <summary>UTC time of the operator review action; null until acted.</summary>

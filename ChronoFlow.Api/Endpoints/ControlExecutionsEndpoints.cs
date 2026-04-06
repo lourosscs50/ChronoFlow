@@ -123,6 +123,8 @@ public static class ControlExecutionsEndpoints
                 Results.NotFound(new { error = "Execution record not found." }),
             PendingReviewActionFailureKind.NotPendingReview =>
                 Results.Conflict(new { error = "Execution is not pending operator review." }),
+            PendingReviewActionFailureKind.AlreadyFinalized =>
+                Results.Conflict(new { error = "A review action was already recorded for this execution." }),
             PendingReviewActionFailureKind.InvalidRecordState =>
                 Results.Conflict(new { error = "Execution record is not in a valid state for this action." }),
             PendingReviewActionFailureKind.WorkflowResolutionMismatch =>

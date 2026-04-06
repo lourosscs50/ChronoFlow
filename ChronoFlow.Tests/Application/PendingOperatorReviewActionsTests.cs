@@ -120,7 +120,7 @@ public sealed class PendingOperatorReviewActionsTests
 
         var secondCancel = await cancel.HandleAsync(pendingId, null, CancellationToken.None);
         Assert.False(secondCancel.Succeeded);
-        Assert.Equal(PendingReviewActionFailureKind.NotPendingReview, secondCancel.Failure);
+        Assert.Equal(PendingReviewActionFailureKind.AlreadyFinalized, secondCancel.Failure);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public sealed class PendingOperatorReviewActionsTests
 
         var secondApprove = await approve.HandleAsync(pendingId, null, CancellationToken.None);
         Assert.False(secondApprove.Succeeded);
-        Assert.Equal(PendingReviewActionFailureKind.NotPendingReview, secondApprove.Failure);
+        Assert.Equal(PendingReviewActionFailureKind.AlreadyFinalized, secondApprove.Failure);
         Assert.Equal(1, counter.CallCount);
 
         var wrongId = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");

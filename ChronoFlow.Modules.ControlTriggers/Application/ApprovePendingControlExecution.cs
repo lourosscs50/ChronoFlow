@@ -22,8 +22,22 @@ public static class ApprovePendingControlExecution
             if (record is null)
                 return PendingReviewActionResult.Fail(PendingReviewActionFailureKind.NotFound);
 
-            if (!IsEligiblePendingReview(record))
-                return PendingReviewActionResult.Fail(PendingReviewActionFailureKind.NotPendingReview);
+            var block = PendingOperatorReviewActionGuards.ClassifyBlocking(record);
+            if (block is not null)
+                return PendingReviewActionResult.Fail(block.Value);
+
+            if (string.IsNullOrWhiteSpace(record.WorkflowKey) || record.ExecutionInstanceId is null)
+                return PendingReviewActionResult.Fail(PendingReviewActionFailureKind.InvalidRecordState);
+
+            record = await executionRecords
+                .GetByIdAsync(executionRecordId, cancellationToken)
+                .ConfigureAwait(false);
+            if (record is null)
+                return PendingReviewActionResult.Fail(PendingReviewActionFailureKind.NotFound);
+
+            block = PendingOperatorReviewActionGuards.ClassifyBlocking(record);
+            if (block is not null)
+                return PendingReviewActionResult.Fail(block.Value);
 
             if (string.IsNullOrWhiteSpace(record.WorkflowKey) || record.ExecutionInstanceId is null)
                 return PendingReviewActionResult.Fail(PendingReviewActionFailureKind.InvalidRecordState);
@@ -51,12 +65,6 @@ public static class ApprovePendingControlExecution
             deduplicator.RecordSuccessfulExecution(command);
             return PendingReviewActionResult.Ok(updated);
         }
-
-        private static bool IsEligiblePendingReview(ControlExecutionRecord record) =>
-            record.PendingOperatorReview
-            && string.Equals(record.OrchestrationPolicyOutcome, OrchestrationPolicyOutcomes.PendingReview, StringComparison.Ordinal)
-            && !record.WasExecuted
-            && record.OperatorReviewAction is null;
 
         private static ControlAdvisoryRouteHint? BuildAdvisoryHint(ControlExecutionRecord record)
         {
