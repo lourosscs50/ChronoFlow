@@ -35,12 +35,12 @@ public sealed class ExecutionInstanceIdentityTests
     }
 
     [Fact]
-    public void ReceiveControlTriggerCommand_has_no_correlation_or_trace_field_for_identity_inference()
+    public void ReceiveControlTriggerCommand_exposes_optional_correlation_id_for_intake_propagation()
     {
         var t = typeof(ReceiveControlTriggerCommand);
-        Assert.DoesNotContain(t.GetProperties(), p =>
-            string.Equals(p.Name, "CorrelationId", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(p.Name, "TraceId", StringComparison.OrdinalIgnoreCase));
+        var correlation = t.GetProperty("CorrelationId");
+        Assert.NotNull(correlation);
+        Assert.Equal(typeof(string), correlation.PropertyType);
     }
 
     private sealed class CountingExecutor : IWorkflowExecutor

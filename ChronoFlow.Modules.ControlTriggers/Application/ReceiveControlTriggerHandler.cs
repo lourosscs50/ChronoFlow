@@ -61,12 +61,26 @@ public sealed class ReceiveControlTriggerHandler(
 
         var opts = advisoryOptions.Value;
         var preliminaryWorkflow = router.ResolveWorkflow(command, null);
+        Guid? orchestrationExecutionInstanceId = preliminaryWorkflow is not null ? Guid.NewGuid() : null;
+
         ControlAdvisoryOutcome? advisoryOutcome = null;
-        if (opts.Enabled && preliminaryWorkflow is not null)
+        if (opts.Enabled && preliminaryWorkflow is not null && orchestrationExecutionInstanceId is not null)
         {
-            advisoryOutcome = await advisor
-                .GetAdvisoryAsync(command, cancellationToken)
+            var advisoryResult = await advisor
+                .GetAdvisoryAsync(command, orchestrationExecutionInstanceId.Value, cancellationToken)
                 .ConfigureAwait(false);
+
+            advisoryOutcome = advisoryResult switch
+            {
+                AdvisoryExecutionResult.Succeeded s => s.Outcome,
+                AdvisoryExecutionResult.Unavailable u =>
+                    LogAndIgnoreAdvisory(logger, u.ReasonCode, unavailable: true),
+                AdvisoryExecutionResult.Failed f =>
+                    LogAndIgnoreAdvisory(logger, f.ReasonCode, unavailable: false),
+                AdvisoryExecutionResult.SkippedNotRequested =>
+                    null,
+                _ => null
+            };
         }
 
         var routeHint = advisoryOutcome is null
@@ -83,7 +97,7 @@ public sealed class ReceiveControlTriggerHandler(
             return ReceiveControlTriggerResult.OkNotExecuted(noWorkflowRecord.Id);
         }
 
-        var executionInstanceId = Guid.NewGuid();
+        var executionInstanceId = orchestrationExecutionInstanceId ?? Guid.NewGuid();
         var execution = await executor
             .ExecuteAsync(executionInstanceId, definition, command, cancellationToken)
             .ConfigureAwait(false);
@@ -103,6 +117,27 @@ public sealed class ReceiveControlTriggerHandler(
             execution.ExecutedStepCount,
             executedRecord.Id,
             executionInstanceId);
+    }
+
+    private static ControlAdvisoryOutcome? LogAndIgnoreAdvisory(
+        ILogger<ReceiveControlTriggerHandler> logger,
+        string reasonCode,
+        bool unavailable)
+    {
+        if (unavailable)
+        {
+            logger.LogWarning(
+                "Control trigger advisory unavailable ({ReasonCode}); using default local routing.",
+                reasonCode);
+        }
+        else
+        {
+            logger.LogWarning(
+                "Control trigger advisory failed ({ReasonCode}); using default local routing.",
+                reasonCode);
+        }
+
+        return null;
     }
 
     private static AdvisoryExecutionSnapshot ToAdvisorySnapshot(ControlAdvisoryOutcome? outcome)

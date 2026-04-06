@@ -13,4 +13,5 @@ public sealed record ReceiveControlTriggerRequest(
     string? ResolvedByUserId,
     string? ReopenedByUserId,
     string? RuleName,
-    bool HasBeenReopened);
+    bool HasBeenReopened,
+    string? CorrelationId = null);

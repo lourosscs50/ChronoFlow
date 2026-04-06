@@ -13,4 +13,6 @@ public sealed record ReceiveControlTriggerCommand(
     string? ResolvedByUserId,
     string? ReopenedByUserId,
     string? RuleName,
-    bool HasBeenReopened);
+    bool HasBeenReopened,
+    /// <summary>Optional trace correlation from upstream intake (bounded, operator-safe).</summary>
+    string? CorrelationId = null);

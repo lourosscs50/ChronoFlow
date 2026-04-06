@@ -41,7 +41,8 @@ public static class ControlTriggersEndpoints
             request.ResolvedByUserId,
             request.ReopenedByUserId,
             request.RuleName,
-            request.HasBeenReopened);
+            request.HasBeenReopened,
+            request.CorrelationId);
 
         var result = await handler.HandleAsync(command, cancellationToken);
 

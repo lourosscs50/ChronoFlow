@@ -6,4 +6,6 @@ public sealed record ControlAdvisoryOutcome(
     string Confidence,
     string ReasonSummary,
     bool UsedMemory,
-    int MemoryItemCount);
+    int MemoryItemCount,
+    /// <summary>Returned by A.I.L. when it allocates its own execution/decision id; never invented by ChronoFlow.</summary>
+    string? LinkedAilExecutionId = null);

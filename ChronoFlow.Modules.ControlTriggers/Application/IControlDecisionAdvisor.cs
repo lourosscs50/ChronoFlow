@@ -1,13 +1,14 @@
 namespace ChronoFlow.Modules.ControlTriggers.Application;
 
-/// <summary>Application port: obtains an advisory decision for a validated control trigger (AIL or other provider).</summary>
+/// <summary>Application port: obtains an advisory decision for a validated control trigger (A.I.L. or other provider).</summary>
 public interface IControlDecisionAdvisor
 {
     /// <summary>
-    /// Returns null when advisory is disabled, the trigger is ineligible, the provider fails, or the response cannot be mapped.
+    /// Returns explicit <see cref="AdvisoryExecutionResult"/> semantics; orchestration chooses fallback routing when advisory is not successful.
     /// Implementations must not throw for transport or mapping failures.
     /// </summary>
-    Task<ControlAdvisoryOutcome?> GetAdvisoryAsync(
+    Task<AdvisoryExecutionResult> GetAdvisoryAsync(
         ReceiveControlTriggerCommand command,
+        Guid orchestrationExecutionInstanceId,
         CancellationToken cancellationToken = default);
 }

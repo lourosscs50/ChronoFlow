@@ -113,10 +113,10 @@ public sealed class ReceiveControlTriggerHandlerAdvisoryTests
     }
 
     [Fact]
-    public async Task Advisory_null_outcome_still_executes_default_and_record_has_no_advisory()
+    public async Task Advisory_unavailable_still_executes_default_and_record_has_no_advisory()
     {
         var opts = new ControlTriggersAdvisoryOptions { Enabled = true };
-        var fake = new FakeControlDecisionAdvisor(null);
+        var fake = new FakeControlDecisionAdvisor(new AdvisoryExecutionResult.Unavailable("test_unavailable"));
         var repo = new InMemoryControlExecutionRecordRepository();
         var sut = CreateSut(opts, fake, executionRecords: repo);
         var command = ValidCommand("AlertCreated", "AlertCreated");
@@ -127,6 +127,24 @@ public sealed class ReceiveControlTriggerHandlerAdvisoryTests
         Assert.Equal("alert-created-default", result.WorkflowKey);
         var row = repo.Records.Single(r => r.Id == result.ExecutionRecordId);
         Assert.False(row.AdvisoryWasUsed);
+        Assert.Equal(result.ExecutionInstanceId, row.ExecutionInstanceId);
+    }
+
+    [Fact]
+    public async Task Orchestration_execution_instance_id_matches_advisor_input_and_persisted_record()
+    {
+        var opts = new ControlTriggersAdvisoryOptions { Enabled = true };
+        var fake = new FakeControlDecisionAdvisor(
+            new ControlAdvisoryOutcome("default_safe", "High", "ok", false, 0));
+        var repo = new InMemoryControlExecutionRecordRepository();
+        var sut = CreateSut(opts, fake, executionRecords: repo);
+        var command = ValidCommand("AlertCreated", "AlertCreated");
+
+        var result = await sut.HandleAsync(command, CancellationToken.None);
+
+        Assert.NotNull(fake.LastOrchestrationExecutionInstanceId);
+        Assert.Equal(fake.LastOrchestrationExecutionInstanceId, result.ExecutionInstanceId);
+        var row = repo.Records.Single(r => r.Id == result.ExecutionRecordId);
         Assert.Equal(result.ExecutionInstanceId, row.ExecutionInstanceId);
     }
 
