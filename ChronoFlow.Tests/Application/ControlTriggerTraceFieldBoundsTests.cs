@@ -20,4 +20,13 @@ public sealed class ControlTriggerTraceFieldBoundsTests
         Assert.Null(ControlTriggerTraceFieldBounds.BoundedCorrelationId("   "));
         Assert.Null(ControlTriggerTraceFieldBounds.BoundedCorrelationId(null));
     }
+
+    [Fact]
+    public void BoundedOperatorReviewNote_truncates_and_trims()
+    {
+        var longNote = new string('n', ControlTriggerTraceFieldBounds.MaxOperatorReviewNoteLength + 10);
+        var b = ControlTriggerTraceFieldBounds.BoundedOperatorReviewNote(longNote);
+        Assert.Equal(ControlTriggerTraceFieldBounds.MaxOperatorReviewNoteLength, b!.Length);
+        Assert.Null(ControlTriggerTraceFieldBounds.BoundedOperatorReviewNote("  "));
+    }
 }

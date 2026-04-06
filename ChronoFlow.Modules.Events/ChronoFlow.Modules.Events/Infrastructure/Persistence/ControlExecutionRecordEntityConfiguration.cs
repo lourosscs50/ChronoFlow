@@ -36,6 +36,11 @@ public sealed class ControlExecutionRecordEntityConfiguration : IEntityTypeConfi
         builder.Property(x => x.OrchestrationPolicyOutcome).HasMaxLength(50);
         builder.Property(x => x.PendingOperatorReview).IsRequired();
 
+        builder.Property(x => x.OccurredAtUtc);
+        builder.Property(x => x.OperatorReviewAction).HasMaxLength(30);
+        builder.Property(x => x.OperatorReviewActionAtUtc);
+        builder.Property(x => x.OperatorReviewNote).HasMaxLength(500);
+
         builder.Property(x => x.ReceivedAtUtc).IsRequired();
         builder.HasIndex(x => x.AlertId);
         builder.HasIndex(x => x.LifecycleEventType);

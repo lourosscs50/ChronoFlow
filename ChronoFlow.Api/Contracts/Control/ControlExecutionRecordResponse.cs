@@ -16,6 +16,7 @@ public sealed record ControlExecutionRecordResponse(
     [property: JsonPropertyName("suppressionReason")] string? SuppressionReason,
     [property: JsonPropertyName("executedStepCount")] int ExecutedStepCount,
     [property: JsonPropertyName("receivedAtUtc")] DateTimeOffset ReceivedAtUtc,
+    [property: JsonPropertyName("occurredAtUtc")] DateTimeOffset? OccurredAtUtc,
     [property: JsonPropertyName("executedAtUtc")] DateTimeOffset? ExecutedAtUtc,
     [property: JsonPropertyName("currentStatus")] string CurrentStatus,
     [property: JsonPropertyName("advisoryWasUsed")] bool AdvisoryWasUsed,
@@ -30,4 +31,7 @@ public sealed record ControlExecutionRecordResponse(
     [property: JsonPropertyName("inboundLinkedExternalExecutionId")] string? InboundLinkedExternalExecutionId,
     [property: JsonPropertyName("pendingOperatorReview")] bool PendingOperatorReview,
     [property: JsonPropertyName("orchestrationPolicyOutcome")] string? OrchestrationPolicyOutcome,
+    [property: JsonPropertyName("operatorReviewAction")] string? OperatorReviewAction,
+    [property: JsonPropertyName("operatorReviewActionAtUtc")] DateTimeOffset? OperatorReviewActionAtUtc,
+    [property: JsonPropertyName("operatorReviewNote")] string? OperatorReviewNote,
     [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId);

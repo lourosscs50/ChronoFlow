@@ -80,6 +80,8 @@ builder.Services.AddScoped<IEventRepository, EfEventRepository>();
 builder.Services.AddScoped<IControlExecutionRecordRepository, EfControlExecutionRecordRepository>();
 builder.Services.AddScoped<ListControlExecutions.Handler>();
 builder.Services.AddScoped<GetControlExecutionById.Handler>();
+builder.Services.AddScoped<ApprovePendingControlExecution.Handler>();
+builder.Services.AddScoped<CancelPendingControlExecution.Handler>();
 builder.Services.AddScoped<IngestEventHandler>();
 builder.Services.AddScoped<GetEventHandler>();
 builder.Services.AddScoped<GetStreamEventsHandler>();

@@ -21,6 +21,7 @@ public static class ControlExecutionRecordResponseMapper
             x.SuppressionReason,
             x.ExecutedStepCount,
             x.ReceivedAtUtc,
+            x.OccurredAtUtc,
             x.ExecutedAtUtc,
             x.CurrentStatus,
             x.AdvisoryWasUsed,
@@ -35,5 +36,8 @@ public static class ControlExecutionRecordResponseMapper
             x.InboundLinkedExternalExecutionId,
             x.PendingOperatorReview,
             x.OrchestrationPolicyOutcome,
+            x.OperatorReviewAction,
+            x.OperatorReviewActionAtUtc,
+            x.OperatorReviewNote,
             x.ExecutionInstanceId);
 }

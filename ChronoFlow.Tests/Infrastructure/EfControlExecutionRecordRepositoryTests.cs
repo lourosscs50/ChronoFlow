@@ -39,6 +39,7 @@ public sealed class EfControlExecutionRecordRepositoryTests
             SuppressionReason = null,
             ExecutedStepCount = 3,
             ReceivedAtUtc = new DateTimeOffset(2026, 4, 3, 12, 0, 0, TimeSpan.Zero),
+            OccurredAtUtc = new DateTimeOffset(2026, 4, 3, 11, 59, 0, TimeSpan.Zero),
             ExecutedAtUtc = new DateTimeOffset(2026, 4, 3, 12, 0, 1, TimeSpan.Zero),
             CurrentStatus = "Open",
             RuleName = "R",
@@ -54,7 +55,10 @@ public sealed class EfControlExecutionRecordRepositoryTests
             InboundDecisionReasonCode = null,
             InboundLinkedExternalExecutionId = null,
             PendingOperatorReview = false,
-            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed
+            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
         await using (var ctx = new EventsDbContext(options))
@@ -69,6 +73,65 @@ public sealed class EfControlExecutionRecordRepositoryTests
             Assert.Equal(3, loaded.ExecutedStepCount);
             Assert.Equal(executionInstanceId, loaded.ExecutionInstanceId);
             Assert.Equal("corr-ef-roundtrip", loaded.CorrelationId);
+            Assert.Equal(new DateTimeOffset(2026, 4, 3, 11, 59, 0, TimeSpan.Zero), loaded.OccurredAtUtc);
+        }
+
+        await using (var ctx = new EventsDbContext(options))
+        {
+            var sut = new EfControlExecutionRecordRepository(ctx);
+            var loaded = await sut.GetByIdAsync(id);
+            Assert.NotNull(loaded);
+            var patched = new ControlExecutionRecord
+            {
+                Id = loaded!.Id,
+                ExecutionInstanceId = loaded.ExecutionInstanceId,
+                TriggerType = loaded.TriggerType,
+                LifecycleEventType = loaded.LifecycleEventType,
+                AlertId = loaded.AlertId,
+                RuleId = loaded.RuleId,
+                SignalId = loaded.SignalId,
+                CorrelationId = loaded.CorrelationId,
+                OccurredAtUtc = loaded.OccurredAtUtc,
+                WorkflowKey = loaded.WorkflowKey,
+                WasExecuted = loaded.WasExecuted,
+                WasSuppressed = loaded.WasSuppressed,
+                SuppressionReason = loaded.SuppressionReason,
+                ExecutedStepCount = loaded.ExecutedStepCount,
+                ReceivedAtUtc = loaded.ReceivedAtUtc,
+                ExecutedAtUtc = loaded.ExecutedAtUtc,
+                CurrentStatus = loaded.CurrentStatus,
+                AcknowledgedByUserId = loaded.AcknowledgedByUserId,
+                ResolvedByUserId = loaded.ResolvedByUserId,
+                ReopenedByUserId = loaded.ReopenedByUserId,
+                RuleName = loaded.RuleName,
+                HasBeenReopened = loaded.HasBeenReopened,
+                AdvisoryWasUsed = loaded.AdvisoryWasUsed,
+                AdvisoryStrategyKey = loaded.AdvisoryStrategyKey,
+                AdvisoryConfidence = loaded.AdvisoryConfidence,
+                AdvisoryReasonSummary = loaded.AdvisoryReasonSummary,
+                LinkedAilExecutionId = loaded.LinkedAilExecutionId,
+                InboundDecisionSummary = loaded.InboundDecisionSummary,
+                InboundDecisionReferenceId = loaded.InboundDecisionReferenceId,
+                InboundDecisionConfidence = loaded.InboundDecisionConfidence,
+                InboundDecisionReasonCode = loaded.InboundDecisionReasonCode,
+                InboundLinkedExternalExecutionId = loaded.InboundLinkedExternalExecutionId,
+                PendingOperatorReview = loaded.PendingOperatorReview,
+                OrchestrationPolicyOutcome = loaded.OrchestrationPolicyOutcome,
+                OperatorReviewAction = OperatorReviewActions.Approved,
+                OperatorReviewActionAtUtc = new DateTimeOffset(2026, 4, 3, 13, 0, 0, TimeSpan.Zero),
+                OperatorReviewNote = "via-ef"
+            };
+            await sut.UpdateAsync(patched, default);
+        }
+
+        await using (var ctx = new EventsDbContext(options))
+        {
+            var sut = new EfControlExecutionRecordRepository(ctx);
+            var after = await sut.GetByIdAsync(id);
+            Assert.NotNull(after);
+            Assert.Equal(OperatorReviewActions.Approved, after!.OperatorReviewAction);
+            Assert.Equal("via-ef", after.OperatorReviewNote);
+            Assert.NotNull(after.OperatorReviewActionAtUtc);
 
             var list = await sut.ListAsync(
                 new ControlExecutionRecordQuery(alertId, null, null, null, null, 0, 10));

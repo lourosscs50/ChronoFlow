@@ -17,6 +17,16 @@ public sealed class InMemoryControlExecutionRecordRepository : IControlExecution
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(ControlExecutionRecord record, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var i = _records.FindIndex(x => x.Id == record.Id);
+        if (i < 0)
+            throw new InvalidOperationException($"Control execution record {record.Id} not found for update.");
+        _records[i] = record;
+        return Task.CompletedTask;
+    }
+
     public Task<ControlExecutionRecord?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

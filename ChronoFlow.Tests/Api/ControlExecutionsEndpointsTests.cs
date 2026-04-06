@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using ChronoFlow.Api.Contracts.Control;
 using ChronoFlow.Modules.ControlTriggers.Application;
 using Xunit;
+using static ChronoFlow.Modules.ControlTriggers.Application.OrchestrationPolicyInboundReasonCodes;
+using static ChronoFlow.Modules.ControlTriggers.Application.OrchestrationPolicyOutcomes;
 
 namespace ChronoFlow.Tests.Api;
 
@@ -69,6 +71,8 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Equal(OrchestrationPolicyOutcomes.Proceed, detail.OrchestrationPolicyOutcome);
         Assert.Equal(executionInstanceId, detail.ExecutionInstanceId);
         Assert.NotEqual(detail.Id, detail.ExecutionInstanceId);
+        Assert.Equal(new DateTimeOffset(2026, 4, 3, 10, 0, 0, TimeSpan.Zero), detail.OccurredAtUtc);
+        Assert.Null(detail.OperatorReviewAction);
 
         var listResponse = await client.GetAsync(
             $"/control/executions?alertId={alertId}&wasExecuted=true");
@@ -193,6 +197,95 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.NotNull(list);
         var row = list!.Single(x => x.Id == recordId);
         Assert.Equal("platform-trace-42", row.CorrelationId);
+    }
+
+    [Fact]
+    public async Task Require_review_then_approve_executes_and_exposes_operator_audit_fields()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", ChronoFlowIntakeTestFactory.IntakeApiKey);
+
+        var alertId = Guid.NewGuid();
+        var body = TriggersBody(alertId) with
+        {
+            InboundDecision = new InboundDecisionIntakeRequest(null, null, null, RequireReview, null)
+        };
+        var post = await client.PostAsJsonAsync("/control/triggers", body);
+        post.EnsureSuccessStatusCode();
+        var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
+        Assert.NotNull(accepted?.ExecutionRecordId);
+        Assert.True(accepted!.PendingOperatorReview);
+        Assert.Equal(PendingReview, accepted.OrchestrationPolicyOutcome);
+        var recordId = accepted.ExecutionRecordId!.Value;
+
+        var pendingDetail = await client.GetFromJsonAsync<ControlExecutionRecordResponse>(
+            $"/control/executions/{recordId}");
+        Assert.NotNull(pendingDetail);
+        Assert.True(pendingDetail!.PendingOperatorReview);
+        Assert.False(pendingDetail.WasExecuted);
+
+        var approve = await client.PostAsJsonAsync(
+            $"/control/executions/{recordId}/approve",
+            new OperatorReviewActionRequest(Note: "go"));
+        approve.EnsureSuccessStatusCode();
+        var approvedBody = await approve.Content.ReadFromJsonAsync<ControlExecutionRecordResponse>();
+        Assert.NotNull(approvedBody);
+        Assert.True(approvedBody!.WasExecuted);
+        Assert.False(approvedBody.PendingOperatorReview);
+        Assert.Equal(Proceed, approvedBody.OrchestrationPolicyOutcome);
+        Assert.Equal(OperatorReviewActions.Approved, approvedBody.OperatorReviewAction);
+        Assert.Equal("go", approvedBody.OperatorReviewNote);
+        Assert.NotNull(approvedBody.OperatorReviewActionAtUtc);
+
+        var finalGet = await client.GetFromJsonAsync<ControlExecutionRecordResponse>(
+            $"/control/executions/{recordId}");
+        Assert.NotNull(finalGet);
+        Assert.Equal(approvedBody.OperatorReviewAction, finalGet!.OperatorReviewAction);
+    }
+
+    [Fact]
+    public async Task Approve_on_non_pending_record_returns_409()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", ChronoFlowIntakeTestFactory.IntakeApiKey);
+
+        var post = await client.PostAsJsonAsync("/control/triggers", TriggersBody(Guid.NewGuid()));
+        post.EnsureSuccessStatusCode();
+        var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
+        var recordId = accepted!.ExecutionRecordId!.Value;
+
+        var approve = await client.PostAsJsonAsync(
+            $"/control/executions/{recordId}/approve",
+            new OperatorReviewActionRequest());
+        Assert.Equal(HttpStatusCode.Conflict, approve.StatusCode);
+    }
+
+    [Fact]
+    public async Task Require_review_cancel_surfaces_review_cancelled_without_execution()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", ChronoFlowIntakeTestFactory.IntakeApiKey);
+
+        var body = TriggersBody(Guid.NewGuid()) with
+        {
+            InboundDecision = new InboundDecisionIntakeRequest(null, null, null, RequireReview, null)
+        };
+        var post = await client.PostAsJsonAsync("/control/triggers", body);
+        post.EnsureSuccessStatusCode();
+        var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
+        var recordId = accepted!.ExecutionRecordId!.Value;
+
+        var cancel = await client.PostAsJsonAsync(
+            $"/control/executions/{recordId}/cancel",
+            new OperatorReviewActionRequest(Note: "reject"));
+        cancel.EnsureSuccessStatusCode();
+        var row = await cancel.Content.ReadFromJsonAsync<ControlExecutionRecordResponse>();
+        Assert.NotNull(row);
+        Assert.False(row!.WasExecuted);
+        Assert.False(row.PendingOperatorReview);
+        Assert.Equal(ReviewCancelled, row.OrchestrationPolicyOutcome);
+        Assert.Equal(OperatorReviewActions.Cancelled, row.OperatorReviewAction);
+        Assert.Equal("reject", row.OperatorReviewNote);
     }
 
     private static ReceiveControlTriggerRequest TriggersBody(Guid alertId) =>

@@ -45,6 +45,7 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.False(r.AdvisoryWasUsed);
         Assert.False(r.PendingOperatorReview);
         Assert.Equal(OrchestrationPolicyOutcomes.Proceed, r.OrchestrationPolicyOutcome);
+        Assert.Equal(cmd.OccurredAtUtc, r.OccurredAtUtc);
     }
 
     [Fact]

@@ -19,6 +19,7 @@ internal static class ControlExecutionRecordFactory
             RuleId = command.RuleId,
             SignalId = command.SignalId,
             CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = null,
             WasExecuted = false,
             WasSuppressed = true,
@@ -43,7 +44,10 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReasonCode = inbound.ReasonCode,
             InboundLinkedExternalExecutionId = inbound.LinkedExternalExecutionId,
             PendingOperatorReview = false,
-            OrchestrationPolicyOutcome = null
+            OrchestrationPolicyOutcome = null,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
     public static ControlExecutionRecord CreateNoWorkflow(
@@ -60,6 +64,7 @@ internal static class ControlExecutionRecordFactory
             RuleId = command.RuleId,
             SignalId = command.SignalId,
             CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = null,
             WasExecuted = false,
             WasSuppressed = false,
@@ -84,7 +89,10 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
             InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId,
             PendingOperatorReview = false,
-            OrchestrationPolicyOutcome = null
+            OrchestrationPolicyOutcome = null,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
     /// <summary>Workflow resolved but orchestration policy blocked or gated execution (no workflow steps run).</summary>
@@ -106,6 +114,7 @@ internal static class ControlExecutionRecordFactory
             RuleId = command.RuleId,
             SignalId = command.SignalId,
             CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = workflowKey,
             WasExecuted = false,
             WasSuppressed = false,
@@ -130,7 +139,10 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
             InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId,
             PendingOperatorReview = pendingOperatorReview,
-            OrchestrationPolicyOutcome = orchestrationPolicyOutcome
+            OrchestrationPolicyOutcome = orchestrationPolicyOutcome,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
     public static ControlExecutionRecord CreateExecuted(
@@ -153,6 +165,7 @@ internal static class ControlExecutionRecordFactory
             RuleId = command.RuleId,
             SignalId = command.SignalId,
             CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = workflowKey,
             WasExecuted = true,
             WasSuppressed = false,
@@ -177,7 +190,10 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReasonCode = advisory.InboundDecisionReasonCode,
             InboundLinkedExternalExecutionId = advisory.InboundLinkedExternalExecutionId,
             PendingOperatorReview = false,
-            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed
+            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
     }
 }
