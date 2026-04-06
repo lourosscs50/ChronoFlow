@@ -9,6 +9,7 @@ public sealed class ReceiveControlTriggerHandler(
     IControlTriggerDeduplicator deduplicator,
     IControlTriggerRouter router,
     IControlDecisionAdvisor advisor,
+    IWorkflowExecutionPolicy workflowPolicy,
     IWorkflowExecutor executor,
     IControlExecutionRecordRepository executionRecords)
 {
@@ -101,6 +102,72 @@ public sealed class ReceiveControlTriggerHandler(
                 advisorySnapshot);
             await executionRecords.AddAsync(noWorkflowRecord, cancellationToken).ConfigureAwait(false);
             return ReceiveControlTriggerResult.OkNotExecuted(noWorkflowRecord.Id);
+        }
+
+        var policyInput = WorkflowPolicyInput.From(command, advisorySnapshot, definition.WorkflowKey);
+        var policyDecision = workflowPolicy.Evaluate(policyInput);
+
+        switch (policyDecision.Kind)
+        {
+            case WorkflowPolicyKind.Suppress:
+            {
+                logger.LogInformation(
+                    "Orchestration policy suppressed execution for alert {AlertId}, lifecycle {Lifecycle}.",
+                    command.AlertId,
+                    command.LifecycleEventType);
+                var policyRecord = ControlExecutionRecordFactory.CreateOrchestrationPolicyRecord(
+                    command,
+                    receivedAtUtc,
+                    advisorySnapshot,
+                    OrchestrationPolicyOutcomes.PolicySuppressed,
+                    workflowKey: null,
+                    executionInstanceId: null,
+                    pendingOperatorReview: false);
+                await executionRecords.AddAsync(policyRecord, cancellationToken).ConfigureAwait(false);
+                return ReceiveControlTriggerResult.OkPolicySuppressed(policyRecord.Id);
+            }
+            case WorkflowPolicyKind.AdvisoryOnly:
+            {
+                logger.LogInformation(
+                    "Orchestration policy advisory-only for alert {AlertId}, workflow {WorkflowKey}.",
+                    command.AlertId,
+                    definition.WorkflowKey);
+                var advisoryRecord = ControlExecutionRecordFactory.CreateOrchestrationPolicyRecord(
+                    command,
+                    receivedAtUtc,
+                    advisorySnapshot,
+                    OrchestrationPolicyOutcomes.AdvisoryOnly,
+                    definition.WorkflowKey,
+                    executionInstanceId: null,
+                    pendingOperatorReview: false);
+                await executionRecords.AddAsync(advisoryRecord, cancellationToken).ConfigureAwait(false);
+                return ReceiveControlTriggerResult.OkAdvisoryOnly(definition.WorkflowKey, advisoryRecord.Id);
+            }
+            case WorkflowPolicyKind.RequireReview:
+            {
+                var reviewInstanceId = orchestrationExecutionInstanceId ?? Guid.NewGuid();
+                logger.LogInformation(
+                    "Orchestration policy requires review for alert {AlertId}, workflow {WorkflowKey}, instance {InstanceId}.",
+                    command.AlertId,
+                    definition.WorkflowKey,
+                    reviewInstanceId);
+                var reviewRecord = ControlExecutionRecordFactory.CreateOrchestrationPolicyRecord(
+                    command,
+                    receivedAtUtc,
+                    advisorySnapshot,
+                    OrchestrationPolicyOutcomes.PendingReview,
+                    definition.WorkflowKey,
+                    reviewInstanceId,
+                    pendingOperatorReview: true);
+                await executionRecords.AddAsync(reviewRecord, cancellationToken).ConfigureAwait(false);
+                return ReceiveControlTriggerResult.OkPendingReview(
+                    definition.WorkflowKey,
+                    reviewRecord.Id,
+                    reviewInstanceId);
+            }
+            case WorkflowPolicyKind.Proceed:
+            default:
+                break;
         }
 
         var executionInstanceId = orchestrationExecutionInstanceId ?? Guid.NewGuid();

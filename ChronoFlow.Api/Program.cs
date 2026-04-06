@@ -90,6 +90,7 @@ builder.Services.AddSingleton<IProcessedTriggerStore, InMemoryProcessedTriggerSt
 builder.Services.AddSingleton<IControlTriggerDeduplicator, DefaultControlTriggerDeduplicator>();
 builder.Services.AddSingleton<IControlTriggerRouter, DefaultControlTriggerRouter>();
 builder.Services.AddSingleton<IWorkflowExecutor, LoggingWorkflowExecutor>();
+builder.Services.AddSingleton<IWorkflowExecutionPolicy, DefaultWorkflowExecutionPolicy>();
 builder.Services.AddScoped<ReceiveControlTriggerHandler>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();

@@ -1,4 +1,5 @@
 using ChronoFlow.Modules.ControlTriggers.Application;
+using static ChronoFlow.Modules.ControlTriggers.Application.OrchestrationPolicyOutcomes;
 using ChronoFlow.Modules.ControlTriggers.Domain;
 using Xunit;
 
@@ -91,6 +92,8 @@ public sealed class ListGetControlExecutionHandlersTests
             InboundDecisionReferenceId = null,
             InboundDecisionConfidence = null,
             InboundDecisionReasonCode = null,
-            InboundLinkedExternalExecutionId = null
+            InboundLinkedExternalExecutionId = null,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = wasExecuted ? Proceed : null
         };
 }

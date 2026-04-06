@@ -19,6 +19,7 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
             deduplicator ?? new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             router,
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             executor,
             executionRecords ?? new InMemoryControlExecutionRecordRepository());
 
@@ -41,6 +42,8 @@ public sealed class ReceiveControlTriggerHandlerExecutionTests
             recorder.StepNamesInOrder);
         Assert.NotEqual(Guid.Empty, result.ExecutionInstanceId);
         Assert.Equal(result.ExecutionInstanceId, recorder.LastExecutionInstanceId);
+        Assert.False(result.PendingOperatorReview);
+        Assert.Equal(OrchestrationPolicyOutcomes.Proceed, result.OrchestrationPolicyOutcome);
     }
 
     [Fact]

@@ -51,7 +51,9 @@ public sealed class EfControlExecutionRecordRepositoryTests
             InboundDecisionReferenceId = null,
             InboundDecisionConfidence = null,
             InboundDecisionReasonCode = null,
-            InboundLinkedExternalExecutionId = null
+            InboundLinkedExternalExecutionId = null,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed
         };
 
         await using (var ctx = new EventsDbContext(options))

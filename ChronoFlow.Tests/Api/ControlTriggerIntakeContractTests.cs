@@ -65,5 +65,7 @@ public sealed class ControlTriggerIntakeContractTests
 
         Assert.NotNull(res);
         Assert.Null(res!.ExecutionInstanceId);
+        Assert.False(res.PendingOperatorReview);
+        Assert.Null(res.OrchestrationPolicyOutcome);
     }
 }

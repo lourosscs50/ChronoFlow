@@ -68,6 +68,8 @@ public static class ControlTriggersEndpoints
                 result.WorkflowKey,
                 result.ExecutedStepCount,
                 result.ExecutionRecordId,
-                result.ExecutionInstanceId));
+                result.ExecutionInstanceId,
+                result.PendingOperatorReview,
+                result.OrchestrationPolicyOutcome));
     }
 }

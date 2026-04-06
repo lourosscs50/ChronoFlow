@@ -18,6 +18,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new RecordingExecutor(),
             repo);
 
@@ -42,6 +43,8 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.NotNull(r.ExecutedAtUtc);
         Assert.Equal("alert-created-default", r.WorkflowKey);
         Assert.False(r.AdvisoryWasUsed);
+        Assert.False(r.PendingOperatorReview);
+        Assert.Equal(OrchestrationPolicyOutcomes.Proceed, r.OrchestrationPolicyOutcome);
     }
 
     [Fact]
@@ -55,6 +58,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(store),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 
@@ -84,6 +88,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 
@@ -114,6 +119,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 

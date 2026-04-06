@@ -27,4 +27,6 @@ public sealed record ControlExecutionRecordResponse(
     [property: JsonPropertyName("inboundDecisionConfidence")] string? InboundDecisionConfidence,
     [property: JsonPropertyName("inboundDecisionReasonCode")] string? InboundDecisionReasonCode,
     [property: JsonPropertyName("inboundLinkedExternalExecutionId")] string? InboundLinkedExternalExecutionId,
+    [property: JsonPropertyName("pendingOperatorReview")] bool PendingOperatorReview,
+    [property: JsonPropertyName("orchestrationPolicyOutcome")] string? OrchestrationPolicyOutcome,
     [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId);

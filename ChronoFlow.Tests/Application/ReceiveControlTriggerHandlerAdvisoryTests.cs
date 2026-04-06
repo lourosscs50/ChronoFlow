@@ -20,6 +20,7 @@ public sealed class ReceiveControlTriggerHandlerAdvisoryTests
             new DefaultControlTriggerDeduplicator(store ?? new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             advisor,
+            new DefaultWorkflowExecutionPolicy(),
             executor ?? new CountingWorkflowExecutor(),
             executionRecords ?? new InMemoryControlExecutionRecordRepository());
 

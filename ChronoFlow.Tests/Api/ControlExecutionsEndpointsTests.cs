@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ChronoFlow.Api.Contracts.Control;
+using ChronoFlow.Modules.ControlTriggers.Application;
 using Xunit;
 
 namespace ChronoFlow.Tests.Api;
@@ -63,6 +64,8 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Null(detail.LinkedAilExecutionId);
         Assert.Null(detail.InboundDecisionSummary);
         Assert.Null(detail.InboundDecisionReferenceId);
+        Assert.False(detail.PendingOperatorReview);
+        Assert.Equal(OrchestrationPolicyOutcomes.Proceed, detail.OrchestrationPolicyOutcome);
         Assert.Equal(executionInstanceId, detail.ExecutionInstanceId);
         Assert.NotEqual(detail.Id, detail.ExecutionInstanceId);
 

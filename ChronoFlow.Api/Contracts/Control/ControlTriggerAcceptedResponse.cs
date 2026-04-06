@@ -10,4 +10,6 @@ public sealed record ControlTriggerAcceptedResponse(
     [property: JsonPropertyName("workflowKey")] string? WorkflowKey,
     [property: JsonPropertyName("executedStepCount")] int ExecutedStepCount,
     [property: JsonPropertyName("executionRecordId")] Guid? ExecutionRecordId,
-    [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId = null);
+    [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId = null,
+    [property: JsonPropertyName("pendingOperatorReview")] bool PendingOperatorReview = false,
+    [property: JsonPropertyName("orchestrationPolicyOutcome")] string? OrchestrationPolicyOutcome = null);

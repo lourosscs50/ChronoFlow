@@ -74,6 +74,13 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("OrchestrationPolicyOutcome")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("PendingOperatorReview")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("CurrentStatus")
                         .IsRequired()
                         .HasMaxLength(100)

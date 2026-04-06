@@ -19,6 +19,7 @@ public sealed class ReceiveControlTriggerHandlerDecisionIntakeTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             advisor,
+            new DefaultWorkflowExecutionPolicy(),
             new CountingWorkflowExecutor(),
             repo);
 

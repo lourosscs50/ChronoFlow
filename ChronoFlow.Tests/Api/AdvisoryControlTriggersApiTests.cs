@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using ChronoFlow.Api.Contracts.Control;
 using ChronoFlow.Modules.ControlTriggers.Application;
 using Xunit;
+using static ChronoFlow.Modules.ControlTriggers.Application.OrchestrationPolicyOutcomes;
 
 namespace ChronoFlow.Tests.Api;
 
@@ -25,6 +26,8 @@ public sealed class AdvisoryControlTriggersApiTests
         Assert.Equal("alert-created-memory-informed", accepted.WorkflowKey);
         Assert.NotNull(accepted.ExecutionRecordId);
         Assert.NotNull(accepted.ExecutionInstanceId);
+        Assert.False(accepted.PendingOperatorReview);
+        Assert.Equal(Proceed, accepted.OrchestrationPolicyOutcome);
 
         var detail = await client.GetFromJsonAsync<ControlExecutionRecordResponse>(
             $"/control/executions/{accepted.ExecutionRecordId}");
@@ -35,6 +38,8 @@ public sealed class AdvisoryControlTriggersApiTests
         Assert.Equal("memory hint", detail.AdvisoryReasonSummary);
         Assert.Null(detail.LinkedAilExecutionId);
         Assert.Null(detail.InboundDecisionSummary);
+        Assert.False(detail.PendingOperatorReview);
+        Assert.Equal(Proceed, detail.OrchestrationPolicyOutcome);
         Assert.Equal(accepted.ExecutionInstanceId, detail.ExecutionInstanceId);
     }
 

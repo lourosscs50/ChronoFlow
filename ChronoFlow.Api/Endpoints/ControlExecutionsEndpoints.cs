@@ -97,5 +97,7 @@ public static class ControlExecutionsEndpoints
             x.InboundDecisionConfidence,
             x.InboundDecisionReasonCode,
             x.InboundLinkedExternalExecutionId,
+            x.PendingOperatorReview,
+            x.OrchestrationPolicyOutcome,
             x.ExecutionInstanceId);
 }

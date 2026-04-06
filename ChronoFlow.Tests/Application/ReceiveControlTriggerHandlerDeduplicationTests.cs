@@ -20,6 +20,7 @@ public sealed class ReceiveControlTriggerHandlerDeduplicationTests
             new DefaultControlTriggerDeduplicator(store),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             executor,
             executionRecords ?? new InMemoryControlExecutionRecordRepository());
 

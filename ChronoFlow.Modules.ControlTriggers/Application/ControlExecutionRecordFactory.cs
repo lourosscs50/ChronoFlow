@@ -40,7 +40,9 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReferenceId = inbound.ReferenceId,
             InboundDecisionConfidence = inbound.Confidence,
             InboundDecisionReasonCode = inbound.ReasonCode,
-            InboundLinkedExternalExecutionId = inbound.LinkedExternalExecutionId
+            InboundLinkedExternalExecutionId = inbound.LinkedExternalExecutionId,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = null
         };
 
     public static ControlExecutionRecord CreateNoWorkflow(
@@ -78,7 +80,54 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReferenceId = snapshot.InboundDecisionReferenceId,
             InboundDecisionConfidence = snapshot.InboundDecisionConfidence,
             InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
-            InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId
+            InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = null
+        };
+
+    /// <summary>Workflow resolved but orchestration policy blocked or gated execution (no workflow steps run).</summary>
+    public static ControlExecutionRecord CreateOrchestrationPolicyRecord(
+        ReceiveControlTriggerCommand command,
+        DateTimeOffset receivedAtUtc,
+        AdvisoryExecutionSnapshot snapshot,
+        string orchestrationPolicyOutcome,
+        string? workflowKey,
+        Guid? executionInstanceId,
+        bool pendingOperatorReview) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            ExecutionInstanceId = executionInstanceId,
+            TriggerType = command.TriggerType,
+            LifecycleEventType = command.LifecycleEventType,
+            AlertId = command.AlertId,
+            RuleId = command.RuleId,
+            SignalId = command.SignalId,
+            WorkflowKey = workflowKey,
+            WasExecuted = false,
+            WasSuppressed = false,
+            SuppressionReason = null,
+            ExecutedStepCount = 0,
+            ReceivedAtUtc = receivedAtUtc,
+            ExecutedAtUtc = null,
+            CurrentStatus = command.CurrentStatus,
+            AcknowledgedByUserId = command.AcknowledgedByUserId,
+            ResolvedByUserId = command.ResolvedByUserId,
+            ReopenedByUserId = command.ReopenedByUserId,
+            RuleName = command.RuleName,
+            HasBeenReopened = command.HasBeenReopened,
+            AdvisoryWasUsed = snapshot.AdvisoryWasUsed,
+            AdvisoryStrategyKey = snapshot.AdvisoryStrategyKey,
+            AdvisoryConfidence = snapshot.AdvisoryConfidence,
+            AdvisoryReasonSummary = snapshot.AdvisoryReasonSummary,
+            LinkedAilExecutionId = snapshot.LinkedAilExecutionId,
+            InboundDecisionSummary = snapshot.InboundDecisionSummary,
+            InboundDecisionReferenceId = snapshot.InboundDecisionReferenceId,
+            InboundDecisionConfidence = snapshot.InboundDecisionConfidence,
+            InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
+            InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId,
+            PendingOperatorReview = pendingOperatorReview,
+            OrchestrationPolicyOutcome = orchestrationPolicyOutcome
         };
 
     public static ControlExecutionRecord CreateExecuted(
@@ -122,7 +171,9 @@ internal static class ControlExecutionRecordFactory
             InboundDecisionReferenceId = advisory.InboundDecisionReferenceId,
             InboundDecisionConfidence = advisory.InboundDecisionConfidence,
             InboundDecisionReasonCode = advisory.InboundDecisionReasonCode,
-            InboundLinkedExternalExecutionId = advisory.InboundLinkedExternalExecutionId
+            InboundLinkedExternalExecutionId = advisory.InboundLinkedExternalExecutionId,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed
         };
     }
 }

@@ -49,4 +49,10 @@ public sealed class ControlExecutionRecord
 
     /// <summary>Upstream external execution identifier when honestly supplied at intake.</summary>
     public string? InboundLinkedExternalExecutionId { get; init; }
+
+    /// <summary>When true, workflow execution is gated pending operator review (Phase 5 will consume).</summary>
+    public bool PendingOperatorReview { get; init; }
+
+    /// <summary>Orchestration policy outcome at intake (e.g. proceed, policy_suppressed); null for legacy rows or duplicate suppression path.</summary>
+    public string? OrchestrationPolicyOutcome { get; init; }
 }

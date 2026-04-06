@@ -18,6 +18,7 @@ public sealed class ExecutionInstanceIdentityTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 
