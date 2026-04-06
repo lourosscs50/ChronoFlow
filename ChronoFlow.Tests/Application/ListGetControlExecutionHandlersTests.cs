@@ -74,6 +74,7 @@ public sealed class ListGetControlExecutionHandlersTests
             AlertId = alertId,
             RuleId = Guid.Parse("b2000000-0000-0000-0000-000000000002"),
             SignalId = Guid.Parse("c3000000-0000-0000-0000-000000000003"),
+            CorrelationId = null,
             WorkflowKey = wasExecuted ? "wf" : null,
             WasExecuted = wasExecuted,
             WasSuppressed = suppressed,

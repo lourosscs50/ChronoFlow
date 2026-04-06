@@ -40,6 +40,7 @@ public sealed class AdvisoryControlTriggersApiTests
         Assert.Null(detail.InboundDecisionSummary);
         Assert.False(detail.PendingOperatorReview);
         Assert.Equal(Proceed, detail.OrchestrationPolicyOutcome);
+        Assert.Null(detail.CorrelationId);
         Assert.Equal(accepted.ExecutionInstanceId, detail.ExecutionInstanceId);
     }
 

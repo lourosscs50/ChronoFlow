@@ -21,6 +21,7 @@ public sealed class ControlExecutionRecordEntityConfiguration : IEntityTypeConfi
         builder.Property(x => x.ResolvedByUserId).HasMaxLength(200);
         builder.Property(x => x.ReopenedByUserId).HasMaxLength(200);
         builder.Property(x => x.RuleName).HasMaxLength(500);
+        builder.Property(x => x.CorrelationId).HasMaxLength(200);
 
         builder.Property(x => x.AdvisoryStrategyKey).HasMaxLength(100);
         builder.Property(x => x.AdvisoryConfidence).HasMaxLength(50);

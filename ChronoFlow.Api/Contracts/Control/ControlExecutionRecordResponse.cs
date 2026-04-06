@@ -9,6 +9,7 @@ public sealed record ControlExecutionRecordResponse(
     [property: JsonPropertyName("alertId")] Guid AlertId,
     [property: JsonPropertyName("ruleId")] Guid RuleId,
     [property: JsonPropertyName("signalId")] Guid SignalId,
+    [property: JsonPropertyName("correlationId")] string? CorrelationId,
     [property: JsonPropertyName("workflowKey")] string? WorkflowKey,
     [property: JsonPropertyName("wasExecuted")] bool WasExecuted,
     [property: JsonPropertyName("wasSuppressed")] bool WasSuppressed,

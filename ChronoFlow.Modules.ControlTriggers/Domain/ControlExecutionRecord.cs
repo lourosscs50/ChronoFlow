@@ -12,6 +12,10 @@ public sealed class ControlExecutionRecord
     public Guid AlertId { get; init; }
     public Guid RuleId { get; init; }
     public Guid SignalId { get; init; }
+
+    /// <summary>Intake correlation id snapshotted at acceptance; null when not supplied.</summary>
+    public string? CorrelationId { get; init; }
+
     public string? WorkflowKey { get; init; }
     public bool WasExecuted { get; init; }
     public bool WasSuppressed { get; init; }

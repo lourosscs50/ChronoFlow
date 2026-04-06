@@ -32,6 +32,7 @@ public sealed class EfControlExecutionRecordRepositoryTests
             AlertId = alertId,
             RuleId = Guid.Parse("b2000000-0000-0000-0000-000000000002"),
             SignalId = Guid.Parse("c3000000-0000-0000-0000-000000000003"),
+            CorrelationId = "corr-ef-roundtrip",
             WorkflowKey = "alert-created-default",
             WasExecuted = true,
             WasSuppressed = false,
@@ -67,6 +68,7 @@ public sealed class EfControlExecutionRecordRepositoryTests
             Assert.True(loaded.WasExecuted);
             Assert.Equal(3, loaded.ExecutedStepCount);
             Assert.Equal(executionInstanceId, loaded.ExecutionInstanceId);
+            Assert.Equal("corr-ef-roundtrip", loaded.CorrelationId);
 
             var list = await sut.ListAsync(
                 new ControlExecutionRecordQuery(alertId, null, null, null, null, 0, 10));

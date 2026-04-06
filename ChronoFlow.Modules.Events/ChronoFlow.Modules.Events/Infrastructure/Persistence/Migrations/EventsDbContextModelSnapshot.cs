@@ -81,6 +81,10 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                     b.Property<bool>("PendingOperatorReview")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("CurrentStatus")
                         .IsRequired()
                         .HasMaxLength(100)

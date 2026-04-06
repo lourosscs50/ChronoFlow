@@ -64,6 +64,7 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Null(detail.LinkedAilExecutionId);
         Assert.Null(detail.InboundDecisionSummary);
         Assert.Null(detail.InboundDecisionReferenceId);
+        Assert.Null(detail.CorrelationId);
         Assert.False(detail.PendingOperatorReview);
         Assert.Equal(OrchestrationPolicyOutcomes.Proceed, detail.OrchestrationPolicyOutcome);
         Assert.Equal(executionInstanceId, detail.ExecutionInstanceId);
@@ -103,6 +104,7 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Null(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
         Assert.Null(detail.ExecutionInstanceId);
+        Assert.Null(detail.CorrelationId);
     }
 
     [Fact]
@@ -130,6 +132,7 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Null(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
         Assert.Null(detail.ExecutionInstanceId);
+        Assert.Null(detail.CorrelationId);
     }
 
     [Fact]
@@ -163,6 +166,33 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Equal("UPSTREAM_CODE", detail.InboundDecisionReasonCode);
         Assert.Equal("ext-exec-zz", detail.InboundLinkedExternalExecutionId);
         Assert.Null(detail.LinkedAilExecutionId);
+        Assert.Null(detail.CorrelationId);
+    }
+
+    [Fact]
+    public async Task Post_trigger_with_correlation_id_surfaces_on_get_and_list()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", ChronoFlowIntakeTestFactory.IntakeApiKey);
+
+        var alertId = Guid.NewGuid();
+        var body = TriggersBody(alertId) with { CorrelationId = "platform-trace-42" };
+        var post = await client.PostAsJsonAsync("/control/triggers", body);
+        post.EnsureSuccessStatusCode();
+        var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
+        Assert.NotNull(accepted?.ExecutionRecordId);
+        var recordId = accepted!.ExecutionRecordId!.Value;
+
+        var detail = await client.GetFromJsonAsync<ControlExecutionRecordResponse>(
+            $"/control/executions/{recordId}");
+        Assert.NotNull(detail);
+        Assert.Equal("platform-trace-42", detail!.CorrelationId);
+
+        var list = await client.GetFromJsonAsync<List<ControlExecutionRecordResponse>>(
+            $"/control/executions?alertId={alertId}&wasExecuted=true");
+        Assert.NotNull(list);
+        var row = list!.Single(x => x.Id == recordId);
+        Assert.Equal("platform-trace-42", row.CorrelationId);
     }
 
     private static ReceiveControlTriggerRequest TriggersBody(Guid alertId) =>

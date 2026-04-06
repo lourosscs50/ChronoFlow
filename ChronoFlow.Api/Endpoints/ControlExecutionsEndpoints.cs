@@ -1,8 +1,8 @@
 using ChronoFlow.Api.Contracts.Control;
+using ChronoFlow.Api.Mapping;
 using ChronoFlow.Api.Options;
 using ChronoFlow.Api.Security;
 using ChronoFlow.Modules.ControlTriggers.Application;
-using ChronoFlow.Modules.ControlTriggers.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -51,7 +51,7 @@ public static class ControlExecutionsEndpoints
             take ?? 50);
 
         var rows = await handler.HandleAsync(query, cancellationToken);
-        return Results.Ok(rows.Select(ToResponse).ToList());
+        return Results.Ok(rows.Select(ControlExecutionRecordResponseMapper.ToResponse).ToList());
     }
 
     private static async Task<IResult> GetExecutionByIdAsync(
@@ -68,36 +68,6 @@ public static class ControlExecutionsEndpoints
         if (row is null)
             return Results.NotFound(new { error = "Execution record not found." });
 
-        return Results.Ok(ToResponse(row));
+        return Results.Ok(ControlExecutionRecordResponseMapper.ToResponse(row));
     }
-
-    private static ControlExecutionRecordResponse ToResponse(ControlExecutionRecord x) =>
-        new(
-            x.Id,
-            x.TriggerType,
-            x.LifecycleEventType,
-            x.AlertId,
-            x.RuleId,
-            x.SignalId,
-            x.WorkflowKey,
-            x.WasExecuted,
-            x.WasSuppressed,
-            x.SuppressionReason,
-            x.ExecutedStepCount,
-            x.ReceivedAtUtc,
-            x.ExecutedAtUtc,
-            x.CurrentStatus,
-            x.AdvisoryWasUsed,
-            x.AdvisoryStrategyKey,
-            x.AdvisoryConfidence,
-            x.AdvisoryReasonSummary,
-            x.LinkedAilExecutionId,
-            x.InboundDecisionSummary,
-            x.InboundDecisionReferenceId,
-            x.InboundDecisionConfidence,
-            x.InboundDecisionReasonCode,
-            x.InboundLinkedExternalExecutionId,
-            x.PendingOperatorReview,
-            x.OrchestrationPolicyOutcome,
-            x.ExecutionInstanceId);
 }
