@@ -81,9 +81,16 @@ public sealed class ListGetControlExecutionHandlersTests
             ReceivedAtUtc = DateTimeOffset.UtcNow,
             ExecutedAtUtc = wasExecuted ? DateTimeOffset.UtcNow : null,
             CurrentStatus = "Open",
+            HasBeenReopened = false,
             AdvisoryWasUsed = false,
             AdvisoryStrategyKey = null,
             AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryReasonSummary = null,
+            LinkedAilExecutionId = null,
+            InboundDecisionSummary = null,
+            InboundDecisionReferenceId = null,
+            InboundDecisionConfidence = null,
+            InboundDecisionReasonCode = null,
+            InboundLinkedExternalExecutionId = null
         };
 }

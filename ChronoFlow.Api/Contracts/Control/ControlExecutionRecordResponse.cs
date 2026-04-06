@@ -21,4 +21,10 @@ public sealed record ControlExecutionRecordResponse(
     [property: JsonPropertyName("advisoryStrategyKey")] string? AdvisoryStrategyKey,
     [property: JsonPropertyName("advisoryConfidence")] string? AdvisoryConfidence,
     [property: JsonPropertyName("advisoryReasonSummary")] string? AdvisoryReasonSummary,
+    [property: JsonPropertyName("linkedAilExecutionId")] string? LinkedAilExecutionId,
+    [property: JsonPropertyName("inboundDecisionSummary")] string? InboundDecisionSummary,
+    [property: JsonPropertyName("inboundDecisionReferenceId")] string? InboundDecisionReferenceId,
+    [property: JsonPropertyName("inboundDecisionConfidence")] string? InboundDecisionConfidence,
+    [property: JsonPropertyName("inboundDecisionReasonCode")] string? InboundDecisionReasonCode,
+    [property: JsonPropertyName("inboundLinkedExternalExecutionId")] string? InboundLinkedExternalExecutionId,
     [property: JsonPropertyName("executionInstanceId")] Guid? ExecutionInstanceId);

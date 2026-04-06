@@ -29,6 +29,15 @@ public static class ControlTriggersEndpoints
         if (!ControlTriggerIntakeApiKey.TryValidate(httpRequest, intakeOptions.Value, out var authError))
             return authError;
 
+        var inbound = request.InboundDecision is null
+            ? null
+            : new InboundDecisionContext(
+                request.InboundDecision.Summary,
+                request.InboundDecision.ReferenceId,
+                request.InboundDecision.Confidence,
+                request.InboundDecision.ReasonCode,
+                request.InboundDecision.LinkedExternalExecutionId);
+
         var command = new ReceiveControlTriggerCommand(
             request.TriggerType,
             request.AlertId,
@@ -42,7 +51,8 @@ public static class ControlTriggersEndpoints
             request.ReopenedByUserId,
             request.RuleName,
             request.HasBeenReopened,
-            request.CorrelationId);
+            request.CorrelationId,
+            inbound);
 
         var result = await handler.HandleAsync(command, cancellationToken);
 

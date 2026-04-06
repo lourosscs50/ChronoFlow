@@ -7,7 +7,8 @@ internal static class ControlExecutionRecordFactory
     public static ControlExecutionRecord CreateSuppressed(
         ReceiveControlTriggerCommand command,
         string suppressionReason,
-        DateTimeOffset receivedAtUtc) =>
+        DateTimeOffset receivedAtUtc,
+        BoundedInboundDecisionSnapshot inbound) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -33,12 +34,19 @@ internal static class ControlExecutionRecordFactory
             AdvisoryWasUsed = false,
             AdvisoryStrategyKey = null,
             AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryReasonSummary = null,
+            LinkedAilExecutionId = null,
+            InboundDecisionSummary = inbound.Summary,
+            InboundDecisionReferenceId = inbound.ReferenceId,
+            InboundDecisionConfidence = inbound.Confidence,
+            InboundDecisionReasonCode = inbound.ReasonCode,
+            InboundLinkedExternalExecutionId = inbound.LinkedExternalExecutionId
         };
 
     public static ControlExecutionRecord CreateNoWorkflow(
         ReceiveControlTriggerCommand command,
-        DateTimeOffset receivedAtUtc) =>
+        DateTimeOffset receivedAtUtc,
+        AdvisoryExecutionSnapshot snapshot) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -61,10 +69,16 @@ internal static class ControlExecutionRecordFactory
             ReopenedByUserId = command.ReopenedByUserId,
             RuleName = command.RuleName,
             HasBeenReopened = command.HasBeenReopened,
-            AdvisoryWasUsed = false,
-            AdvisoryStrategyKey = null,
-            AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryWasUsed = snapshot.AdvisoryWasUsed,
+            AdvisoryStrategyKey = snapshot.AdvisoryStrategyKey,
+            AdvisoryConfidence = snapshot.AdvisoryConfidence,
+            AdvisoryReasonSummary = snapshot.AdvisoryReasonSummary,
+            LinkedAilExecutionId = snapshot.LinkedAilExecutionId,
+            InboundDecisionSummary = snapshot.InboundDecisionSummary,
+            InboundDecisionReferenceId = snapshot.InboundDecisionReferenceId,
+            InboundDecisionConfidence = snapshot.InboundDecisionConfidence,
+            InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
+            InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId
         };
 
     public static ControlExecutionRecord CreateExecuted(
@@ -76,7 +90,7 @@ internal static class ControlExecutionRecordFactory
         DateTimeOffset executedAtUtc,
         AdvisoryExecutionSnapshot? advisory = null)
     {
-        advisory ??= new AdvisoryExecutionSnapshot(false, null, null, null);
+        advisory ??= AdvisoryExecutionSnapshot.Empty;
         return new()
         {
             Id = Guid.NewGuid(),
@@ -102,7 +116,13 @@ internal static class ControlExecutionRecordFactory
             AdvisoryWasUsed = advisory.AdvisoryWasUsed,
             AdvisoryStrategyKey = advisory.AdvisoryStrategyKey,
             AdvisoryConfidence = advisory.AdvisoryConfidence,
-            AdvisoryReasonSummary = advisory.AdvisoryReasonSummary
+            AdvisoryReasonSummary = advisory.AdvisoryReasonSummary,
+            LinkedAilExecutionId = advisory.LinkedAilExecutionId,
+            InboundDecisionSummary = advisory.InboundDecisionSummary,
+            InboundDecisionReferenceId = advisory.InboundDecisionReferenceId,
+            InboundDecisionConfidence = advisory.InboundDecisionConfidence,
+            InboundDecisionReasonCode = advisory.InboundDecisionReasonCode,
+            InboundLinkedExternalExecutionId = advisory.InboundLinkedExternalExecutionId
         };
     }
 }

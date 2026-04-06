@@ -50,6 +50,30 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                     b.Property<bool>("AdvisoryWasUsed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("InboundDecisionConfidence")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("InboundDecisionReasonCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("InboundDecisionReferenceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("InboundDecisionSummary")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("InboundLinkedExternalExecutionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("LinkedAilExecutionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("CurrentStatus")
                         .IsRequired()
                         .HasMaxLength(100)

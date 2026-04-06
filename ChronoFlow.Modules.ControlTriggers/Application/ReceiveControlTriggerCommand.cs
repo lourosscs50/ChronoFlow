@@ -15,4 +15,6 @@ public sealed record ReceiveControlTriggerCommand(
     string? RuleName,
     bool HasBeenReopened,
     /// <summary>Optional trace correlation from upstream intake (bounded, operator-safe).</summary>
-    string? CorrelationId = null);
+    string? CorrelationId = null,
+    /// <summary>Optional structured decision/advisory context from upstream (bounded; snapshotted at start, not recomputed).</summary>
+    InboundDecisionContext? InboundDecision = null);

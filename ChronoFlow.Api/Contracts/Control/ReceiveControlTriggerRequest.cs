@@ -14,4 +14,5 @@ public sealed record ReceiveControlTriggerRequest(
     string? ReopenedByUserId,
     string? RuleName,
     bool HasBeenReopened,
-    string? CorrelationId = null);
+    string? CorrelationId = null,
+    InboundDecisionIntakeRequest? InboundDecision = null);

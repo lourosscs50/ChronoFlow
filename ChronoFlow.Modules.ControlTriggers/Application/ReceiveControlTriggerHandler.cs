@@ -13,6 +13,7 @@ public sealed class ReceiveControlTriggerHandler(
     IControlExecutionRecordRepository executionRecords)
 {
     private const int MaxAdvisoryReasonLength = 500;
+    private const int MaxLinkedAilExecutionIdLength = 200;
 
     public async Task<ReceiveControlTriggerResult> HandleAsync(
         ReceiveControlTriggerCommand command,
@@ -36,6 +37,7 @@ public sealed class ReceiveControlTriggerHandler(
         if (command.SignalId == Guid.Empty)
             return ReceiveControlTriggerResult.Invalid("SignalId is required.");
 
+        var inboundBounded = InboundDecisionIntakeMapper.Map(command.InboundDecision);
         var receivedAtUtc = DateTimeOffset.UtcNow;
 
         logger.LogInformation(
@@ -54,7 +56,8 @@ public sealed class ReceiveControlTriggerHandler(
             var suppressedRecord = ControlExecutionRecordFactory.CreateSuppressed(
                 command,
                 dedup.SuppressionReason!,
-                receivedAtUtc);
+                receivedAtUtc,
+                inboundBounded);
             await executionRecords.AddAsync(suppressedRecord, cancellationToken).ConfigureAwait(false);
             return ReceiveControlTriggerResult.OkSuppressed(dedup.SuppressionReason!, suppressedRecord.Id);
         }
@@ -88,11 +91,14 @@ public sealed class ReceiveControlTriggerHandler(
             : new ControlAdvisoryRouteHint(advisoryOutcome.SelectedStrategyKey);
 
         var definition = router.ResolveWorkflow(command, routeHint);
-        var advisorySnapshot = ToAdvisorySnapshot(advisoryOutcome);
+        var advisorySnapshot = BuildStartTimeAdvisorySnapshot(inboundBounded, advisoryOutcome);
 
         if (definition is null)
         {
-            var noWorkflowRecord = ControlExecutionRecordFactory.CreateNoWorkflow(command, receivedAtUtc);
+            var noWorkflowRecord = ControlExecutionRecordFactory.CreateNoWorkflow(
+                command,
+                receivedAtUtc,
+                advisorySnapshot);
             await executionRecords.AddAsync(noWorkflowRecord, cancellationToken).ConfigureAwait(false);
             return ReceiveControlTriggerResult.OkNotExecuted(noWorkflowRecord.Id);
         }
@@ -140,22 +146,43 @@ public sealed class ReceiveControlTriggerHandler(
         return null;
     }
 
-    private static AdvisoryExecutionSnapshot ToAdvisorySnapshot(ControlAdvisoryOutcome? outcome)
+    private static AdvisoryExecutionSnapshot BuildStartTimeAdvisorySnapshot(
+        BoundedInboundDecisionSnapshot inbound,
+        ControlAdvisoryOutcome? outcome)
     {
         if (outcome is null)
-            return new AdvisoryExecutionSnapshot(false, null, null, null);
+        {
+            return new AdvisoryExecutionSnapshot(
+                false,
+                null,
+                null,
+                null,
+                null,
+                inbound.Summary,
+                inbound.ReferenceId,
+                inbound.Confidence,
+                inbound.ReasonCode,
+                inbound.LinkedExternalExecutionId);
+        }
 
         return new AdvisoryExecutionSnapshot(
-            AdvisoryWasUsed: true,
-            AdvisoryStrategyKey: outcome.SelectedStrategyKey,
-            AdvisoryConfidence: outcome.Confidence,
-            AdvisoryReasonSummary: Truncate(outcome.ReasonSummary, MaxAdvisoryReasonLength));
+            true,
+            outcome.SelectedStrategyKey,
+            outcome.Confidence,
+            Truncate(outcome.ReasonSummary, MaxAdvisoryReasonLength),
+            Truncate(outcome.LinkedAilExecutionId, MaxLinkedAilExecutionIdLength),
+            inbound.Summary,
+            inbound.ReferenceId,
+            inbound.Confidence,
+            inbound.ReasonCode,
+            inbound.LinkedExternalExecutionId);
     }
 
     private static string? Truncate(string? text, int maxLen)
     {
-        if (string.IsNullOrEmpty(text))
-            return text;
-        return text.Length <= maxLen ? text : text[..maxLen];
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+        var t = text.Trim();
+        return t.Length <= maxLen ? t : t[..maxLen];
     }
 }

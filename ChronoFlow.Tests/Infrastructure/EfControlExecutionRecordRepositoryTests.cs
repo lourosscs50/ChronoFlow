@@ -41,10 +41,17 @@ public sealed class EfControlExecutionRecordRepositoryTests
             ExecutedAtUtc = new DateTimeOffset(2026, 4, 3, 12, 0, 1, TimeSpan.Zero),
             CurrentStatus = "Open",
             RuleName = "R",
+            HasBeenReopened = false,
             AdvisoryWasUsed = false,
             AdvisoryStrategyKey = null,
             AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryReasonSummary = null,
+            LinkedAilExecutionId = null,
+            InboundDecisionSummary = null,
+            InboundDecisionReferenceId = null,
+            InboundDecisionConfidence = null,
+            InboundDecisionReasonCode = null,
+            InboundLinkedExternalExecutionId = null
         };
 
         await using (var ctx = new EventsDbContext(options))

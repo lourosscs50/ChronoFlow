@@ -60,6 +60,9 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.NotNull(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
         Assert.Null(detail.AdvisoryStrategyKey);
+        Assert.Null(detail.LinkedAilExecutionId);
+        Assert.Null(detail.InboundDecisionSummary);
+        Assert.Null(detail.InboundDecisionReferenceId);
         Assert.Equal(executionInstanceId, detail.ExecutionInstanceId);
         Assert.NotEqual(detail.Id, detail.ExecutionInstanceId);
 
@@ -124,6 +127,39 @@ public sealed class ControlExecutionsEndpointsTests : IClassFixture<ChronoFlowIn
         Assert.Null(detail.ExecutedAtUtc);
         Assert.False(detail.AdvisoryWasUsed);
         Assert.Null(detail.ExecutionInstanceId);
+    }
+
+    [Fact]
+    public async Task Post_trigger_with_inbound_decision_persists_bounded_fields_on_get()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", ChronoFlowIntakeTestFactory.IntakeApiKey);
+
+        var alertId = Guid.NewGuid();
+        var body = TriggersBody(alertId) with
+        {
+            InboundDecision = new InboundDecisionIntakeRequest(
+                "intake-summary",
+                "intake-ref-1",
+                "Low",
+                "UPSTREAM_CODE",
+                "ext-exec-zz")
+        };
+        var post = await client.PostAsJsonAsync("/control/triggers", body);
+        post.EnsureSuccessStatusCode();
+        var accepted = await post.Content.ReadFromJsonAsync<ControlTriggerAcceptedResponse>();
+        Assert.NotNull(accepted?.ExecutionRecordId);
+
+        var detail = await client.GetFromJsonAsync<ControlExecutionRecordResponse>(
+            $"/control/executions/{accepted!.ExecutionRecordId}");
+        Assert.NotNull(detail);
+        Assert.False(detail!.AdvisoryWasUsed);
+        Assert.Equal("intake-summary", detail.InboundDecisionSummary);
+        Assert.Equal("intake-ref-1", detail.InboundDecisionReferenceId);
+        Assert.Equal("Low", detail.InboundDecisionConfidence);
+        Assert.Equal("UPSTREAM_CODE", detail.InboundDecisionReasonCode);
+        Assert.Equal("ext-exec-zz", detail.InboundLinkedExternalExecutionId);
+        Assert.Null(detail.LinkedAilExecutionId);
     }
 
     private static ReceiveControlTriggerRequest TriggersBody(Guid alertId) =>

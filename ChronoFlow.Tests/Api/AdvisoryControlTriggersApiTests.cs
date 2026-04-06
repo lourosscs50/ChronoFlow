@@ -33,6 +33,8 @@ public sealed class AdvisoryControlTriggersApiTests
         Assert.Equal(AdvisoryStrategyKeys.MemoryInformed, detail.AdvisoryStrategyKey);
         Assert.Equal("High", detail.AdvisoryConfidence);
         Assert.Equal("memory hint", detail.AdvisoryReasonSummary);
+        Assert.Null(detail.LinkedAilExecutionId);
+        Assert.Null(detail.InboundDecisionSummary);
         Assert.Equal(accepted.ExecutionInstanceId, detail.ExecutionInstanceId);
     }
 

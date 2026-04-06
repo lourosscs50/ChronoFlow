@@ -91,5 +91,11 @@ public static class ControlExecutionsEndpoints
             x.AdvisoryStrategyKey,
             x.AdvisoryConfidence,
             x.AdvisoryReasonSummary,
+            x.LinkedAilExecutionId,
+            x.InboundDecisionSummary,
+            x.InboundDecisionReferenceId,
+            x.InboundDecisionConfidence,
+            x.InboundDecisionReasonCode,
+            x.InboundLinkedExternalExecutionId,
             x.ExecutionInstanceId);
 }

@@ -34,4 +34,19 @@ public sealed class ControlExecutionRecord
 
     /// <summary>Short summary only; not a full audit payload.</summary>
     public string? AdvisoryReasonSummary { get; init; }
+
+    /// <summary>A.I.L. execution/decision identifier when returned by advisory dependency; never invented locally.</summary>
+    public string? LinkedAilExecutionId { get; init; }
+
+    /// <summary>Bounded intake decision summary snapshotted at start.</summary>
+    public string? InboundDecisionSummary { get; init; }
+
+    public string? InboundDecisionReferenceId { get; init; }
+
+    public string? InboundDecisionConfidence { get; init; }
+
+    public string? InboundDecisionReasonCode { get; init; }
+
+    /// <summary>Upstream external execution identifier when honestly supplied at intake.</summary>
+    public string? InboundLinkedExternalExecutionId { get; init; }
 }
