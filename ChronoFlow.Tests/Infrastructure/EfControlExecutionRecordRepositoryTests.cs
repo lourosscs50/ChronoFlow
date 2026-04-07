@@ -21,28 +21,44 @@ public sealed class EfControlExecutionRecordRepositoryTests
         }
 
         var id = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        var executionInstanceId = Guid.Parse("66666666-6666-6666-6666-666666666666");
         var alertId = Guid.Parse("55555555-5555-5555-5555-555555555555");
         var record = new ControlExecutionRecord
         {
             Id = id,
+            ExecutionInstanceId = executionInstanceId,
             TriggerType = "AlertCreated",
             LifecycleEventType = "AlertCreated",
             AlertId = alertId,
             RuleId = Guid.Parse("b2000000-0000-0000-0000-000000000002"),
             SignalId = Guid.Parse("c3000000-0000-0000-0000-000000000003"),
+            CorrelationId = "corr-ef-roundtrip",
             WorkflowKey = "alert-created-default",
             WasExecuted = true,
             WasSuppressed = false,
             SuppressionReason = null,
             ExecutedStepCount = 3,
             ReceivedAtUtc = new DateTimeOffset(2026, 4, 3, 12, 0, 0, TimeSpan.Zero),
+            OccurredAtUtc = new DateTimeOffset(2026, 4, 3, 11, 59, 0, TimeSpan.Zero),
             ExecutedAtUtc = new DateTimeOffset(2026, 4, 3, 12, 0, 1, TimeSpan.Zero),
             CurrentStatus = "Open",
             RuleName = "R",
+            HasBeenReopened = false,
             AdvisoryWasUsed = false,
             AdvisoryStrategyKey = null,
             AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryReasonSummary = null,
+            LinkedAilExecutionId = null,
+            InboundDecisionSummary = null,
+            InboundDecisionReferenceId = null,
+            InboundDecisionConfidence = null,
+            InboundDecisionReasonCode = null,
+            InboundLinkedExternalExecutionId = null,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
         await using (var ctx = new EventsDbContext(options))
@@ -55,6 +71,67 @@ public sealed class EfControlExecutionRecordRepositoryTests
             Assert.Equal("alert-created-default", loaded!.WorkflowKey);
             Assert.True(loaded.WasExecuted);
             Assert.Equal(3, loaded.ExecutedStepCount);
+            Assert.Equal(executionInstanceId, loaded.ExecutionInstanceId);
+            Assert.Equal("corr-ef-roundtrip", loaded.CorrelationId);
+            Assert.Equal(new DateTimeOffset(2026, 4, 3, 11, 59, 0, TimeSpan.Zero), loaded.OccurredAtUtc);
+        }
+
+        await using (var ctx = new EventsDbContext(options))
+        {
+            var sut = new EfControlExecutionRecordRepository(ctx);
+            var loaded = await sut.GetByIdAsync(id);
+            Assert.NotNull(loaded);
+            var patched = new ControlExecutionRecord
+            {
+                Id = loaded!.Id,
+                ExecutionInstanceId = loaded.ExecutionInstanceId,
+                TriggerType = loaded.TriggerType,
+                LifecycleEventType = loaded.LifecycleEventType,
+                AlertId = loaded.AlertId,
+                RuleId = loaded.RuleId,
+                SignalId = loaded.SignalId,
+                CorrelationId = loaded.CorrelationId,
+                OccurredAtUtc = loaded.OccurredAtUtc,
+                WorkflowKey = loaded.WorkflowKey,
+                WasExecuted = loaded.WasExecuted,
+                WasSuppressed = loaded.WasSuppressed,
+                SuppressionReason = loaded.SuppressionReason,
+                ExecutedStepCount = loaded.ExecutedStepCount,
+                ReceivedAtUtc = loaded.ReceivedAtUtc,
+                ExecutedAtUtc = loaded.ExecutedAtUtc,
+                CurrentStatus = loaded.CurrentStatus,
+                AcknowledgedByUserId = loaded.AcknowledgedByUserId,
+                ResolvedByUserId = loaded.ResolvedByUserId,
+                ReopenedByUserId = loaded.ReopenedByUserId,
+                RuleName = loaded.RuleName,
+                HasBeenReopened = loaded.HasBeenReopened,
+                AdvisoryWasUsed = loaded.AdvisoryWasUsed,
+                AdvisoryStrategyKey = loaded.AdvisoryStrategyKey,
+                AdvisoryConfidence = loaded.AdvisoryConfidence,
+                AdvisoryReasonSummary = loaded.AdvisoryReasonSummary,
+                LinkedAilExecutionId = loaded.LinkedAilExecutionId,
+                InboundDecisionSummary = loaded.InboundDecisionSummary,
+                InboundDecisionReferenceId = loaded.InboundDecisionReferenceId,
+                InboundDecisionConfidence = loaded.InboundDecisionConfidence,
+                InboundDecisionReasonCode = loaded.InboundDecisionReasonCode,
+                InboundLinkedExternalExecutionId = loaded.InboundLinkedExternalExecutionId,
+                PendingOperatorReview = loaded.PendingOperatorReview,
+                OrchestrationPolicyOutcome = loaded.OrchestrationPolicyOutcome,
+                OperatorReviewAction = OperatorReviewActions.Approved,
+                OperatorReviewActionAtUtc = new DateTimeOffset(2026, 4, 3, 13, 0, 0, TimeSpan.Zero),
+                OperatorReviewNote = "via-ef"
+            };
+            await sut.UpdateAsync(patched, default);
+        }
+
+        await using (var ctx = new EventsDbContext(options))
+        {
+            var sut = new EfControlExecutionRecordRepository(ctx);
+            var after = await sut.GetByIdAsync(id);
+            Assert.NotNull(after);
+            Assert.Equal(OperatorReviewActions.Approved, after!.OperatorReviewAction);
+            Assert.Equal("via-ef", after.OperatorReviewNote);
+            Assert.NotNull(after.OperatorReviewActionAtUtc);
 
             var list = await sut.ListAsync(
                 new ControlExecutionRecordQuery(alertId, null, null, null, null, 0, 10));

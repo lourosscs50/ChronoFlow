@@ -7,15 +7,19 @@ internal static class ControlExecutionRecordFactory
     public static ControlExecutionRecord CreateSuppressed(
         ReceiveControlTriggerCommand command,
         string suppressionReason,
-        DateTimeOffset receivedAtUtc) =>
+        DateTimeOffset receivedAtUtc,
+        BoundedInboundDecisionSnapshot inbound) =>
         new()
         {
             Id = Guid.NewGuid(),
+            ExecutionInstanceId = null,
             TriggerType = command.TriggerType,
             LifecycleEventType = command.LifecycleEventType,
             AlertId = command.AlertId,
             RuleId = command.RuleId,
             SignalId = command.SignalId,
+            CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = null,
             WasExecuted = false,
             WasSuppressed = true,
@@ -32,20 +36,35 @@ internal static class ControlExecutionRecordFactory
             AdvisoryWasUsed = false,
             AdvisoryStrategyKey = null,
             AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryReasonSummary = null,
+            LinkedAilExecutionId = null,
+            InboundDecisionSummary = inbound.Summary,
+            InboundDecisionReferenceId = inbound.ReferenceId,
+            InboundDecisionConfidence = inbound.Confidence,
+            InboundDecisionReasonCode = inbound.ReasonCode,
+            InboundLinkedExternalExecutionId = inbound.LinkedExternalExecutionId,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = null,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
     public static ControlExecutionRecord CreateNoWorkflow(
         ReceiveControlTriggerCommand command,
-        DateTimeOffset receivedAtUtc) =>
+        DateTimeOffset receivedAtUtc,
+        AdvisoryExecutionSnapshot snapshot) =>
         new()
         {
             Id = Guid.NewGuid(),
+            ExecutionInstanceId = null,
             TriggerType = command.TriggerType,
             LifecycleEventType = command.LifecycleEventType,
             AlertId = command.AlertId,
             RuleId = command.RuleId,
             SignalId = command.SignalId,
+            CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = null,
             WasExecuted = false,
             WasSuppressed = false,
@@ -59,29 +78,94 @@ internal static class ControlExecutionRecordFactory
             ReopenedByUserId = command.ReopenedByUserId,
             RuleName = command.RuleName,
             HasBeenReopened = command.HasBeenReopened,
-            AdvisoryWasUsed = false,
-            AdvisoryStrategyKey = null,
-            AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryWasUsed = snapshot.AdvisoryWasUsed,
+            AdvisoryStrategyKey = snapshot.AdvisoryStrategyKey,
+            AdvisoryConfidence = snapshot.AdvisoryConfidence,
+            AdvisoryReasonSummary = snapshot.AdvisoryReasonSummary,
+            LinkedAilExecutionId = snapshot.LinkedAilExecutionId,
+            InboundDecisionSummary = snapshot.InboundDecisionSummary,
+            InboundDecisionReferenceId = snapshot.InboundDecisionReferenceId,
+            InboundDecisionConfidence = snapshot.InboundDecisionConfidence,
+            InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
+            InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = null,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
 
-    public static ControlExecutionRecord CreateExecuted(
+    /// <summary>Workflow resolved but orchestration policy blocked or gated execution (no workflow steps run).</summary>
+    public static ControlExecutionRecord CreateOrchestrationPolicyRecord(
         ReceiveControlTriggerCommand command,
-        string workflowKey,
-        int executedStepCount,
         DateTimeOffset receivedAtUtc,
-        DateTimeOffset executedAtUtc,
-        AdvisoryExecutionSnapshot? advisory = null)
-    {
-        advisory ??= new AdvisoryExecutionSnapshot(false, null, null, null);
-        return new()
+        AdvisoryExecutionSnapshot snapshot,
+        string orchestrationPolicyOutcome,
+        string? workflowKey,
+        Guid? executionInstanceId,
+        bool pendingOperatorReview) =>
+        new()
         {
             Id = Guid.NewGuid(),
+            ExecutionInstanceId = executionInstanceId,
             TriggerType = command.TriggerType,
             LifecycleEventType = command.LifecycleEventType,
             AlertId = command.AlertId,
             RuleId = command.RuleId,
             SignalId = command.SignalId,
+            CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
+            WorkflowKey = workflowKey,
+            WasExecuted = false,
+            WasSuppressed = false,
+            SuppressionReason = null,
+            ExecutedStepCount = 0,
+            ReceivedAtUtc = receivedAtUtc,
+            ExecutedAtUtc = null,
+            CurrentStatus = command.CurrentStatus,
+            AcknowledgedByUserId = command.AcknowledgedByUserId,
+            ResolvedByUserId = command.ResolvedByUserId,
+            ReopenedByUserId = command.ReopenedByUserId,
+            RuleName = command.RuleName,
+            HasBeenReopened = command.HasBeenReopened,
+            AdvisoryWasUsed = snapshot.AdvisoryWasUsed,
+            AdvisoryStrategyKey = snapshot.AdvisoryStrategyKey,
+            AdvisoryConfidence = snapshot.AdvisoryConfidence,
+            AdvisoryReasonSummary = snapshot.AdvisoryReasonSummary,
+            LinkedAilExecutionId = snapshot.LinkedAilExecutionId,
+            InboundDecisionSummary = snapshot.InboundDecisionSummary,
+            InboundDecisionReferenceId = snapshot.InboundDecisionReferenceId,
+            InboundDecisionConfidence = snapshot.InboundDecisionConfidence,
+            InboundDecisionReasonCode = snapshot.InboundDecisionReasonCode,
+            InboundLinkedExternalExecutionId = snapshot.InboundLinkedExternalExecutionId,
+            PendingOperatorReview = pendingOperatorReview,
+            OrchestrationPolicyOutcome = orchestrationPolicyOutcome,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
+        };
+
+    public static ControlExecutionRecord CreateExecuted(
+        ReceiveControlTriggerCommand command,
+        string workflowKey,
+        Guid executionInstanceId,
+        int executedStepCount,
+        DateTimeOffset receivedAtUtc,
+        DateTimeOffset executedAtUtc,
+        AdvisoryExecutionSnapshot? advisory = null)
+    {
+        advisory ??= AdvisoryExecutionSnapshot.Empty;
+        return new()
+        {
+            Id = Guid.NewGuid(),
+            ExecutionInstanceId = executionInstanceId,
+            TriggerType = command.TriggerType,
+            LifecycleEventType = command.LifecycleEventType,
+            AlertId = command.AlertId,
+            RuleId = command.RuleId,
+            SignalId = command.SignalId,
+            CorrelationId = ControlTriggerTraceFieldBounds.BoundedCorrelationId(command.CorrelationId),
+            OccurredAtUtc = command.OccurredAtUtc,
             WorkflowKey = workflowKey,
             WasExecuted = true,
             WasSuppressed = false,
@@ -98,7 +182,18 @@ internal static class ControlExecutionRecordFactory
             AdvisoryWasUsed = advisory.AdvisoryWasUsed,
             AdvisoryStrategyKey = advisory.AdvisoryStrategyKey,
             AdvisoryConfidence = advisory.AdvisoryConfidence,
-            AdvisoryReasonSummary = advisory.AdvisoryReasonSummary
+            AdvisoryReasonSummary = advisory.AdvisoryReasonSummary,
+            LinkedAilExecutionId = advisory.LinkedAilExecutionId,
+            InboundDecisionSummary = advisory.InboundDecisionSummary,
+            InboundDecisionReferenceId = advisory.InboundDecisionReferenceId,
+            InboundDecisionConfidence = advisory.InboundDecisionConfidence,
+            InboundDecisionReasonCode = advisory.InboundDecisionReasonCode,
+            InboundLinkedExternalExecutionId = advisory.InboundLinkedExternalExecutionId,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = OrchestrationPolicyOutcomes.Proceed,
+            OperatorReviewAction = null,
+            OperatorReviewActionAtUtc = null,
+            OperatorReviewNote = null
         };
     }
 }

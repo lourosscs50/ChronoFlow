@@ -17,6 +17,7 @@ public sealed class ReceiveControlTriggerHandlerTests
             deduplicator ?? new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             router ?? new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             executor ?? new LoggingWorkflowExecutor(NullLogger<LoggingWorkflowExecutor>.Instance),
             executionRecords ?? new InMemoryControlExecutionRecordRepository());
 

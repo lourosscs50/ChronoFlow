@@ -1,8 +1,9 @@
 using ChronoFlow.Api.Contracts.Control;
+using ChronoFlow.Api.Mapping;
 using ChronoFlow.Api.Options;
 using ChronoFlow.Api.Security;
 using ChronoFlow.Modules.ControlTriggers.Application;
-using ChronoFlow.Modules.ControlTriggers.Domain;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -19,6 +20,16 @@ public static class ControlExecutionsEndpoints
 
         app.MapGet("/control/executions/{id:guid}", GetExecutionByIdAsync)
             .WithName("GetControlExecutionById")
+            .WithTags("Control")
+            .AllowAnonymous();
+
+        app.MapPost("/control/executions/{id:guid}/approve", ApprovePendingReviewAsync)
+            .WithName("ApprovePendingControlExecution")
+            .WithTags("Control")
+            .AllowAnonymous();
+
+        app.MapPost("/control/executions/{id:guid}/cancel", CancelPendingReviewAsync)
+            .WithName("CancelPendingControlExecution")
             .WithTags("Control")
             .AllowAnonymous();
 
@@ -51,7 +62,7 @@ public static class ControlExecutionsEndpoints
             take ?? 50);
 
         var rows = await handler.HandleAsync(query, cancellationToken);
-        return Results.Ok(rows.Select(ToResponse).ToList());
+        return Results.Ok(rows.Select(ControlExecutionRecordResponseMapper.ToResponse).ToList());
     }
 
     private static async Task<IResult> GetExecutionByIdAsync(
@@ -68,27 +79,57 @@ public static class ControlExecutionsEndpoints
         if (row is null)
             return Results.NotFound(new { error = "Execution record not found." });
 
-        return Results.Ok(ToResponse(row));
+        return Results.Ok(ControlExecutionRecordResponseMapper.ToResponse(row));
     }
 
-    private static ControlExecutionRecordResponse ToResponse(ControlExecutionRecord x) =>
-        new(
-            x.Id,
-            x.TriggerType,
-            x.LifecycleEventType,
-            x.AlertId,
-            x.RuleId,
-            x.SignalId,
-            x.WorkflowKey,
-            x.WasExecuted,
-            x.WasSuppressed,
-            x.SuppressionReason,
-            x.ExecutedStepCount,
-            x.ReceivedAtUtc,
-            x.ExecutedAtUtc,
-            x.CurrentStatus,
-            x.AdvisoryWasUsed,
-            x.AdvisoryStrategyKey,
-            x.AdvisoryConfidence,
-            x.AdvisoryReasonSummary);
+    private static async Task<IResult> ApprovePendingReviewAsync(
+        Guid id,
+        HttpRequest httpRequest,
+        [FromServices] IOptions<ControlTriggersIntakeOptions> intakeOptions,
+        [FromServices] ApprovePendingControlExecution.Handler handler,
+        OperatorReviewActionRequest? body,
+        CancellationToken cancellationToken)
+    {
+        if (!ControlTriggerIntakeApiKey.TryValidate(httpRequest, intakeOptions.Value, out var authError))
+            return authError;
+
+        var result = await handler.HandleAsync(id, body?.Note, cancellationToken);
+        return MapReviewActionResult(result);
+    }
+
+    private static async Task<IResult> CancelPendingReviewAsync(
+        Guid id,
+        HttpRequest httpRequest,
+        [FromServices] IOptions<ControlTriggersIntakeOptions> intakeOptions,
+        [FromServices] CancelPendingControlExecution.Handler handler,
+        OperatorReviewActionRequest? body,
+        CancellationToken cancellationToken)
+    {
+        if (!ControlTriggerIntakeApiKey.TryValidate(httpRequest, intakeOptions.Value, out var authError))
+            return authError;
+
+        var result = await handler.HandleAsync(id, body?.Note, cancellationToken);
+        return MapReviewActionResult(result);
+    }
+
+    private static IResult MapReviewActionResult(PendingReviewActionResult result)
+    {
+        if (result.Succeeded && result.Record is not null)
+            return Results.Ok(ControlExecutionRecordResponseMapper.ToResponse(result.Record));
+
+        return result.Failure switch
+        {
+            PendingReviewActionFailureKind.NotFound =>
+                Results.NotFound(new { error = "Execution record not found." }),
+            PendingReviewActionFailureKind.NotPendingReview =>
+                Results.Conflict(new { error = "Execution is not pending operator review." }),
+            PendingReviewActionFailureKind.AlreadyFinalized =>
+                Results.Conflict(new { error = "A review action was already recorded for this execution." }),
+            PendingReviewActionFailureKind.InvalidRecordState =>
+                Results.Conflict(new { error = "Execution record is not in a valid state for this action." }),
+            PendingReviewActionFailureKind.WorkflowResolutionMismatch =>
+                Results.Conflict(new { error = "Stored workflow no longer resolves consistently for this record." }),
+            _ => Results.Problem(statusCode: StatusCodes.Status500InternalServerError)
+        };
+    }
 }

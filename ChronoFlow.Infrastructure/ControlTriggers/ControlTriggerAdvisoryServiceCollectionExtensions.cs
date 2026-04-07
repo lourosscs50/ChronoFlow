@@ -14,13 +14,15 @@ public static class ControlTriggerAdvisoryServiceCollectionExtensions
         services.Configure<ControlTriggersAdvisoryOptions>(
             configuration.GetSection(ControlTriggersAdvisoryOptions.SectionName));
 
-        services.AddHttpClient<IControlDecisionAdvisor, HttpAilControlDecisionAdvisor>((sp, client) =>
+        services.AddHttpClient<IAilExecutionClient, HttpAilExecutionClient>((sp, client) =>
         {
             var o = sp.GetRequiredService<IOptions<ControlTriggersAdvisoryOptions>>().Value;
             if (!string.IsNullOrWhiteSpace(o.BaseUrl))
                 client.BaseAddress = new Uri(o.BaseUrl.TrimEnd('/') + "/");
             client.Timeout = TimeSpan.FromSeconds(Math.Clamp(o.TimeoutSeconds, 1, 120));
         });
+
+        services.AddScoped<IControlDecisionAdvisor, HttpAilControlDecisionAdvisor>();
 
         return services;
     }

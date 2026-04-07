@@ -7,6 +7,7 @@ namespace ChronoFlow.Modules.ControlTriggers.Application;
 public sealed class LoggingWorkflowExecutor(ILogger<LoggingWorkflowExecutor> logger) : IWorkflowExecutor
 {
     public Task<WorkflowExecutionResult> ExecuteAsync(
+        Guid executionInstanceId,
         WorkflowDefinition definition,
         ReceiveControlTriggerCommand trigger,
         CancellationToken cancellationToken = default)
@@ -16,14 +17,15 @@ public sealed class LoggingWorkflowExecutor(ILogger<LoggingWorkflowExecutor> log
         foreach (var step in ordered)
         {
             logger.LogInformation(
-                "Workflow {WorkflowKey} step {StepName} ({StepType}) order {Order} for alert {AlertId}",
+                "Workflow {WorkflowKey} execution {ExecutionInstanceId} step {StepName} ({StepType}) order {Order} for alert {AlertId}",
                 definition.WorkflowKey,
+                executionInstanceId,
                 step.StepName,
                 step.StepType,
                 step.Order,
                 trigger.AlertId);
         }
 
-        return Task.FromResult(new WorkflowExecutionResult(ordered.Count));
+        return Task.FromResult(new WorkflowExecutionResult(ordered.Count, executionInstanceId));
     }
 }

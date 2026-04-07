@@ -1,4 +1,5 @@
 using ChronoFlow.Modules.ControlTriggers.Application;
+using static ChronoFlow.Modules.ControlTriggers.Application.OrchestrationPolicyOutcomes;
 using ChronoFlow.Modules.ControlTriggers.Domain;
 using Xunit;
 
@@ -73,6 +74,7 @@ public sealed class ListGetControlExecutionHandlersTests
             AlertId = alertId,
             RuleId = Guid.Parse("b2000000-0000-0000-0000-000000000002"),
             SignalId = Guid.Parse("c3000000-0000-0000-0000-000000000003"),
+            CorrelationId = null,
             WorkflowKey = wasExecuted ? "wf" : null,
             WasExecuted = wasExecuted,
             WasSuppressed = suppressed,
@@ -81,9 +83,18 @@ public sealed class ListGetControlExecutionHandlersTests
             ReceivedAtUtc = DateTimeOffset.UtcNow,
             ExecutedAtUtc = wasExecuted ? DateTimeOffset.UtcNow : null,
             CurrentStatus = "Open",
+            HasBeenReopened = false,
             AdvisoryWasUsed = false,
             AdvisoryStrategyKey = null,
             AdvisoryConfidence = null,
-            AdvisoryReasonSummary = null
+            AdvisoryReasonSummary = null,
+            LinkedAilExecutionId = null,
+            InboundDecisionSummary = null,
+            InboundDecisionReferenceId = null,
+            InboundDecisionConfidence = null,
+            InboundDecisionReasonCode = null,
+            InboundLinkedExternalExecutionId = null,
+            PendingOperatorReview = false,
+            OrchestrationPolicyOutcome = wasExecuted ? Proceed : null
         };
 }

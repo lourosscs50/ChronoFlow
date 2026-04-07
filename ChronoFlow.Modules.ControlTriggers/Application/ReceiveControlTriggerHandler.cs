@@ -9,10 +9,12 @@ public sealed class ReceiveControlTriggerHandler(
     IControlTriggerDeduplicator deduplicator,
     IControlTriggerRouter router,
     IControlDecisionAdvisor advisor,
+    IWorkflowExecutionPolicy workflowPolicy,
     IWorkflowExecutor executor,
     IControlExecutionRecordRepository executionRecords)
 {
     private const int MaxAdvisoryReasonLength = 500;
+    private const int MaxLinkedAilExecutionIdLength = 200;
 
     public async Task<ReceiveControlTriggerResult> HandleAsync(
         ReceiveControlTriggerCommand command,
@@ -36,6 +38,7 @@ public sealed class ReceiveControlTriggerHandler(
         if (command.SignalId == Guid.Empty)
             return ReceiveControlTriggerResult.Invalid("SignalId is required.");
 
+        var inboundBounded = InboundDecisionIntakeMapper.Map(command.InboundDecision);
         var receivedAtUtc = DateTimeOffset.UtcNow;
 
         logger.LogInformation(
@@ -54,19 +57,34 @@ public sealed class ReceiveControlTriggerHandler(
             var suppressedRecord = ControlExecutionRecordFactory.CreateSuppressed(
                 command,
                 dedup.SuppressionReason!,
-                receivedAtUtc);
+                receivedAtUtc,
+                inboundBounded);
             await executionRecords.AddAsync(suppressedRecord, cancellationToken).ConfigureAwait(false);
             return ReceiveControlTriggerResult.OkSuppressed(dedup.SuppressionReason!, suppressedRecord.Id);
         }
 
         var opts = advisoryOptions.Value;
         var preliminaryWorkflow = router.ResolveWorkflow(command, null);
+        Guid? orchestrationExecutionInstanceId = preliminaryWorkflow is not null ? Guid.NewGuid() : null;
+
         ControlAdvisoryOutcome? advisoryOutcome = null;
-        if (opts.Enabled && preliminaryWorkflow is not null)
+        if (opts.Enabled && preliminaryWorkflow is not null && orchestrationExecutionInstanceId is not null)
         {
-            advisoryOutcome = await advisor
-                .GetAdvisoryAsync(command, cancellationToken)
+            var advisoryResult = await advisor
+                .GetAdvisoryAsync(command, orchestrationExecutionInstanceId.Value, cancellationToken)
                 .ConfigureAwait(false);
+
+            advisoryOutcome = advisoryResult switch
+            {
+                AdvisoryExecutionResult.Succeeded s => s.Outcome,
+                AdvisoryExecutionResult.Unavailable u =>
+                    LogAndIgnoreAdvisory(logger, u.ReasonCode, unavailable: true),
+                AdvisoryExecutionResult.Failed f =>
+                    LogAndIgnoreAdvisory(logger, f.ReasonCode, unavailable: false),
+                AdvisoryExecutionResult.SkippedNotRequested =>
+                    null,
+                _ => null
+            };
         }
 
         var routeHint = advisoryOutcome is null
@@ -74,20 +92,93 @@ public sealed class ReceiveControlTriggerHandler(
             : new ControlAdvisoryRouteHint(advisoryOutcome.SelectedStrategyKey);
 
         var definition = router.ResolveWorkflow(command, routeHint);
-        var advisorySnapshot = ToAdvisorySnapshot(advisoryOutcome);
+        var advisorySnapshot = BuildStartTimeAdvisorySnapshot(inboundBounded, advisoryOutcome);
 
         if (definition is null)
         {
-            var noWorkflowRecord = ControlExecutionRecordFactory.CreateNoWorkflow(command, receivedAtUtc);
+            var noWorkflowRecord = ControlExecutionRecordFactory.CreateNoWorkflow(
+                command,
+                receivedAtUtc,
+                advisorySnapshot);
             await executionRecords.AddAsync(noWorkflowRecord, cancellationToken).ConfigureAwait(false);
             return ReceiveControlTriggerResult.OkNotExecuted(noWorkflowRecord.Id);
         }
 
-        var execution = await executor.ExecuteAsync(definition, command, cancellationToken).ConfigureAwait(false);
+        var policyInput = WorkflowPolicyInput.From(command, advisorySnapshot, definition.WorkflowKey);
+        var policyDecision = workflowPolicy.Evaluate(policyInput);
+
+        switch (policyDecision.Kind)
+        {
+            case WorkflowPolicyKind.Suppress:
+            {
+                logger.LogInformation(
+                    "Orchestration policy suppressed execution for alert {AlertId}, lifecycle {Lifecycle}.",
+                    command.AlertId,
+                    command.LifecycleEventType);
+                var policyRecord = ControlExecutionRecordFactory.CreateOrchestrationPolicyRecord(
+                    command,
+                    receivedAtUtc,
+                    advisorySnapshot,
+                    OrchestrationPolicyOutcomes.PolicySuppressed,
+                    workflowKey: null,
+                    executionInstanceId: null,
+                    pendingOperatorReview: false);
+                await executionRecords.AddAsync(policyRecord, cancellationToken).ConfigureAwait(false);
+                return ReceiveControlTriggerResult.OkPolicySuppressed(policyRecord.Id);
+            }
+            case WorkflowPolicyKind.AdvisoryOnly:
+            {
+                logger.LogInformation(
+                    "Orchestration policy advisory-only for alert {AlertId}, workflow {WorkflowKey}.",
+                    command.AlertId,
+                    definition.WorkflowKey);
+                var advisoryRecord = ControlExecutionRecordFactory.CreateOrchestrationPolicyRecord(
+                    command,
+                    receivedAtUtc,
+                    advisorySnapshot,
+                    OrchestrationPolicyOutcomes.AdvisoryOnly,
+                    definition.WorkflowKey,
+                    executionInstanceId: null,
+                    pendingOperatorReview: false);
+                await executionRecords.AddAsync(advisoryRecord, cancellationToken).ConfigureAwait(false);
+                return ReceiveControlTriggerResult.OkAdvisoryOnly(definition.WorkflowKey, advisoryRecord.Id);
+            }
+            case WorkflowPolicyKind.RequireReview:
+            {
+                var reviewInstanceId = orchestrationExecutionInstanceId ?? Guid.NewGuid();
+                logger.LogInformation(
+                    "Orchestration policy requires review for alert {AlertId}, workflow {WorkflowKey}, instance {InstanceId}.",
+                    command.AlertId,
+                    definition.WorkflowKey,
+                    reviewInstanceId);
+                var reviewRecord = ControlExecutionRecordFactory.CreateOrchestrationPolicyRecord(
+                    command,
+                    receivedAtUtc,
+                    advisorySnapshot,
+                    OrchestrationPolicyOutcomes.PendingReview,
+                    definition.WorkflowKey,
+                    reviewInstanceId,
+                    pendingOperatorReview: true);
+                await executionRecords.AddAsync(reviewRecord, cancellationToken).ConfigureAwait(false);
+                return ReceiveControlTriggerResult.OkPendingReview(
+                    definition.WorkflowKey,
+                    reviewRecord.Id,
+                    reviewInstanceId);
+            }
+            case WorkflowPolicyKind.Proceed:
+            default:
+                break;
+        }
+
+        var executionInstanceId = orchestrationExecutionInstanceId ?? Guid.NewGuid();
+        var execution = await executor
+            .ExecuteAsync(executionInstanceId, definition, command, cancellationToken)
+            .ConfigureAwait(false);
         var executedAtUtc = DateTimeOffset.UtcNow;
         var executedRecord = ControlExecutionRecordFactory.CreateExecuted(
             command,
             definition.WorkflowKey,
+            executionInstanceId,
             execution.ExecutedStepCount,
             receivedAtUtc,
             executedAtUtc,
@@ -97,25 +188,68 @@ public sealed class ReceiveControlTriggerHandler(
         return ReceiveControlTriggerResult.OkExecuted(
             definition.WorkflowKey,
             execution.ExecutedStepCount,
-            executedRecord.Id);
+            executedRecord.Id,
+            executionInstanceId);
     }
 
-    private static AdvisoryExecutionSnapshot ToAdvisorySnapshot(ControlAdvisoryOutcome? outcome)
+    private static ControlAdvisoryOutcome? LogAndIgnoreAdvisory(
+        ILogger<ReceiveControlTriggerHandler> logger,
+        string reasonCode,
+        bool unavailable)
+    {
+        if (unavailable)
+        {
+            logger.LogWarning(
+                "Control trigger advisory unavailable ({ReasonCode}); using default local routing.",
+                reasonCode);
+        }
+        else
+        {
+            logger.LogWarning(
+                "Control trigger advisory failed ({ReasonCode}); using default local routing.",
+                reasonCode);
+        }
+
+        return null;
+    }
+
+    private static AdvisoryExecutionSnapshot BuildStartTimeAdvisorySnapshot(
+        BoundedInboundDecisionSnapshot inbound,
+        ControlAdvisoryOutcome? outcome)
     {
         if (outcome is null)
-            return new AdvisoryExecutionSnapshot(false, null, null, null);
+        {
+            return new AdvisoryExecutionSnapshot(
+                false,
+                null,
+                null,
+                null,
+                null,
+                inbound.Summary,
+                inbound.ReferenceId,
+                inbound.Confidence,
+                inbound.ReasonCode,
+                inbound.LinkedExternalExecutionId);
+        }
 
         return new AdvisoryExecutionSnapshot(
-            AdvisoryWasUsed: true,
-            AdvisoryStrategyKey: outcome.SelectedStrategyKey,
-            AdvisoryConfidence: outcome.Confidence,
-            AdvisoryReasonSummary: Truncate(outcome.ReasonSummary, MaxAdvisoryReasonLength));
+            true,
+            outcome.SelectedStrategyKey,
+            outcome.Confidence,
+            Truncate(outcome.ReasonSummary, MaxAdvisoryReasonLength),
+            Truncate(outcome.LinkedAilExecutionId, MaxLinkedAilExecutionIdLength),
+            inbound.Summary,
+            inbound.ReferenceId,
+            inbound.Confidence,
+            inbound.ReasonCode,
+            inbound.LinkedExternalExecutionId);
     }
 
     private static string? Truncate(string? text, int maxLen)
     {
-        if (string.IsNullOrEmpty(text))
-            return text;
-        return text.Length <= maxLen ? text : text[..maxLen];
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+        var t = text.Trim();
+        return t.Length <= maxLen ? t : t[..maxLen];
     }
 }

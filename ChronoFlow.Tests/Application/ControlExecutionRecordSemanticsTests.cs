@@ -18,6 +18,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new RecordingExecutor(),
             repo);
 
@@ -28,8 +29,12 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.True(result.WasExecuted);
         Assert.False(result.WasSuppressed);
         Assert.Equal(result.ExecutionRecordId, repo.Records.Single().Id);
+        Assert.NotNull(result.ExecutionInstanceId);
+        Assert.NotEqual(Guid.Empty, result.ExecutionInstanceId);
 
         var r = repo.Records.Single();
+        Assert.Equal(result.ExecutionInstanceId, r.ExecutionInstanceId);
+        Assert.NotEqual(r.Id, r.ExecutionInstanceId);
         Assert.True(r.WasExecuted);
         Assert.False(r.WasSuppressed);
         Assert.Null(r.SuppressionReason);
@@ -38,6 +43,9 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.NotNull(r.ExecutedAtUtc);
         Assert.Equal("alert-created-default", r.WorkflowKey);
         Assert.False(r.AdvisoryWasUsed);
+        Assert.False(r.PendingOperatorReview);
+        Assert.Equal(OrchestrationPolicyOutcomes.Proceed, r.OrchestrationPolicyOutcome);
+        Assert.Equal(cmd.OccurredAtUtc, r.OccurredAtUtc);
     }
 
     [Fact]
@@ -51,6 +59,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(store),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 
@@ -67,6 +76,7 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.Null(suppressed.WorkflowKey);
         Assert.Equal(0, suppressed.ExecutedStepCount);
         Assert.Null(suppressed.ExecutedAtUtc);
+        Assert.Null(suppressed.ExecutionInstanceId);
     }
 
     [Fact]
@@ -79,6 +89,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 
@@ -88,6 +99,7 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.True(result.Accepted);
         Assert.False(result.WasExecuted);
         Assert.False(result.WasSuppressed);
+        Assert.Null(result.ExecutionInstanceId);
 
         var r = repo.Records.Single();
         Assert.False(r.WasExecuted);
@@ -95,6 +107,7 @@ public sealed class ControlExecutionRecordSemanticsTests
         Assert.Null(r.WorkflowKey);
         Assert.Equal(0, r.ExecutedStepCount);
         Assert.Null(r.ExecutedAtUtc);
+        Assert.Null(r.ExecutionInstanceId);
     }
 
     [Fact]
@@ -107,6 +120,7 @@ public sealed class ControlExecutionRecordSemanticsTests
             new DefaultControlTriggerDeduplicator(new InMemoryProcessedTriggerStore()),
             new DefaultControlTriggerRouter(),
             new NoOpControlDecisionAdvisor(),
+            new DefaultWorkflowExecutionPolicy(),
             new CountingExecutor(),
             repo);
 
@@ -135,26 +149,28 @@ public sealed class ControlExecutionRecordSemanticsTests
     private sealed class RecordingExecutor : IWorkflowExecutor
     {
         public Task<WorkflowExecutionResult> ExecuteAsync(
+            Guid executionInstanceId,
             WorkflowDefinition definition,
             ReceiveControlTriggerCommand trigger,
             CancellationToken cancellationToken = default)
         {
             _ = trigger;
             _ = cancellationToken;
-            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count));
+            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count, executionInstanceId));
         }
     }
 
     private sealed class CountingExecutor : IWorkflowExecutor
     {
         public Task<WorkflowExecutionResult> ExecuteAsync(
+            Guid executionInstanceId,
             WorkflowDefinition definition,
             ReceiveControlTriggerCommand trigger,
             CancellationToken cancellationToken = default)
         {
             _ = trigger;
             _ = cancellationToken;
-            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count));
+            return Task.FromResult(new WorkflowExecutionResult(definition.Steps.Count, executionInstanceId));
         }
     }
 }

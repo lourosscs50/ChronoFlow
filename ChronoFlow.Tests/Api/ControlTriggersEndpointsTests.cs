@@ -42,6 +42,8 @@ public sealed class ControlTriggersEndpointsTests : IClassFixture<ChronoFlowInta
         Assert.Equal("alert-created-default", payload.WorkflowKey);
         Assert.Equal(3, payload.ExecutedStepCount);
         Assert.NotNull(payload.ExecutionRecordId);
+        Assert.NotNull(payload.ExecutionInstanceId);
+        Assert.NotEqual(Guid.Empty, payload.ExecutionInstanceId);
     }
 
     [Fact]
@@ -69,6 +71,8 @@ public sealed class ControlTriggersEndpointsTests : IClassFixture<ChronoFlowInta
         Assert.NotNull(p1.ExecutionRecordId);
         Assert.NotNull(p2.ExecutionRecordId);
         Assert.NotEqual(p1.ExecutionRecordId, p2.ExecutionRecordId);
+        Assert.NotNull(p1.ExecutionInstanceId);
+        Assert.Null(p2.ExecutionInstanceId);
     }
 
     [Fact]
@@ -111,6 +115,8 @@ public sealed class ControlTriggersEndpointsTests : IClassFixture<ChronoFlowInta
         Assert.Equal("alert-created-default", payload.WorkflowKey);
         Assert.Equal(3, payload.ExecutedStepCount);
         Assert.NotNull(payload.ExecutionRecordId);
+        Assert.NotNull(payload.ExecutionInstanceId);
+        Assert.NotEqual(Guid.Empty, payload.ExecutionInstanceId);
     }
 
     [Fact]
@@ -133,6 +139,7 @@ public sealed class ControlTriggersEndpointsTests : IClassFixture<ChronoFlowInta
         Assert.False(payload.WasSuppressed);
         Assert.Equal(0, payload.ExecutedStepCount);
         Assert.NotNull(payload.ExecutionRecordId);
+        Assert.Null(payload.ExecutionInstanceId);
     }
 
     /// <summary>Unique alert id per call by default avoids cross-test interference from singleton in-memory suppression store.</summary>

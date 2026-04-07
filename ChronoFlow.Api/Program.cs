@@ -80,6 +80,8 @@ builder.Services.AddScoped<IEventRepository, EfEventRepository>();
 builder.Services.AddScoped<IControlExecutionRecordRepository, EfControlExecutionRecordRepository>();
 builder.Services.AddScoped<ListControlExecutions.Handler>();
 builder.Services.AddScoped<GetControlExecutionById.Handler>();
+builder.Services.AddScoped<ApprovePendingControlExecution.Handler>();
+builder.Services.AddScoped<CancelPendingControlExecution.Handler>();
 builder.Services.AddScoped<IngestEventHandler>();
 builder.Services.AddScoped<GetEventHandler>();
 builder.Services.AddScoped<GetStreamEventsHandler>();
@@ -90,6 +92,7 @@ builder.Services.AddSingleton<IProcessedTriggerStore, InMemoryProcessedTriggerSt
 builder.Services.AddSingleton<IControlTriggerDeduplicator, DefaultControlTriggerDeduplicator>();
 builder.Services.AddSingleton<IControlTriggerRouter, DefaultControlTriggerRouter>();
 builder.Services.AddSingleton<IWorkflowExecutor, LoggingWorkflowExecutor>();
+builder.Services.AddSingleton<IWorkflowExecutionPolicy, DefaultWorkflowExecutionPolicy>();
 builder.Services.AddScoped<ReceiveControlTriggerHandler>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();

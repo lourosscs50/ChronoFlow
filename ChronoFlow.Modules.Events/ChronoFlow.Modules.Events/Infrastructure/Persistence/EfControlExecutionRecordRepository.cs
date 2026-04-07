@@ -14,6 +14,12 @@ public sealed class EfControlExecutionRecordRepository(EventsDbContext dbContext
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task UpdateAsync(ControlExecutionRecord record, CancellationToken cancellationToken = default)
+    {
+        dbContext.ControlExecutionRecords.Update(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<ControlExecutionRecord?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await dbContext.ControlExecutionRecords

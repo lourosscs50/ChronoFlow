@@ -29,6 +29,15 @@ public static class ControlTriggersEndpoints
         if (!ControlTriggerIntakeApiKey.TryValidate(httpRequest, intakeOptions.Value, out var authError))
             return authError;
 
+        var inbound = request.InboundDecision is null
+            ? null
+            : new InboundDecisionContext(
+                request.InboundDecision.Summary,
+                request.InboundDecision.ReferenceId,
+                request.InboundDecision.Confidence,
+                request.InboundDecision.ReasonCode,
+                request.InboundDecision.LinkedExternalExecutionId);
+
         var command = new ReceiveControlTriggerCommand(
             request.TriggerType,
             request.AlertId,
@@ -41,7 +50,9 @@ public static class ControlTriggersEndpoints
             request.ResolvedByUserId,
             request.ReopenedByUserId,
             request.RuleName,
-            request.HasBeenReopened);
+            request.HasBeenReopened,
+            request.CorrelationId,
+            inbound);
 
         var result = await handler.HandleAsync(command, cancellationToken);
 
@@ -56,6 +67,9 @@ public static class ControlTriggersEndpoints
                 result.SuppressionReason,
                 result.WorkflowKey,
                 result.ExecutedStepCount,
-                result.ExecutionRecordId));
+                result.ExecutionRecordId,
+                result.ExecutionInstanceId,
+                result.PendingOperatorReview,
+                result.OrchestrationPolicyOutcome));
     }
 }

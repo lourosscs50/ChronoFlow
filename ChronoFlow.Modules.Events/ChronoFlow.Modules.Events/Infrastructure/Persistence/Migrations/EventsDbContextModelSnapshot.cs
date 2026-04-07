@@ -32,9 +32,6 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("AlertId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("AdvisoryConfidence")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -50,6 +47,13 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                     b.Property<bool>("AdvisoryWasUsed")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid>("AlertId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("CurrentStatus")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -61,13 +65,61 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                     b.Property<int>("ExecutedStepCount")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("ExecutionInstanceId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("HasBeenReopened")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("InboundDecisionConfidence")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("InboundDecisionReasonCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("InboundDecisionReferenceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("InboundDecisionSummary")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("InboundLinkedExternalExecutionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("LifecycleEventType")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LinkedAilExecutionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OperatorReviewAction")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTimeOffset?>("OperatorReviewActionAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OperatorReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("OrchestrationPolicyOutcome")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("PendingOperatorReview")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset>("ReceivedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -112,6 +164,8 @@ namespace ChronoFlow.Modules.Events.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AlertId");
+
+                    b.HasIndex("ExecutionInstanceId");
 
                     b.HasIndex("LifecycleEventType");
 

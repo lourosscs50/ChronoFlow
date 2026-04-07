@@ -43,4 +43,29 @@ public sealed class ControlTriggerIntakeContractTests
         Assert.Equal("Heat rule", req.RuleName);
         Assert.True(req.HasBeenReopened);
     }
+
+    [Fact]
+    public void ControlTriggerAcceptedResponse_deserializes_when_executionInstanceId_omitted()
+    {
+        const string json =
+            """
+            {
+              "wasExecuted": false,
+              "wasSuppressed": true,
+              "suppressionReason": "dup",
+              "workflowKey": null,
+              "executedStepCount": 0,
+              "executionRecordId": "11111111-1111-4111-8111-111111111111"
+            }
+            """;
+
+        var res = JsonSerializer.Deserialize<ControlTriggerAcceptedResponse>(
+            json,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        Assert.NotNull(res);
+        Assert.Null(res!.ExecutionInstanceId);
+        Assert.False(res.PendingOperatorReview);
+        Assert.Null(res.OrchestrationPolicyOutcome);
+    }
 }

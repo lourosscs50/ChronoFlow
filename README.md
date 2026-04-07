@@ -89,6 +89,12 @@ ChronoFlow is built with:
 
 ---
 
+# Documentation
+
+* **[Wave 2 — Control operators & release](docs/WAVE2_CONTROL_OPERATORS_AND_RELEASE.md)** — control trigger intake, execution records, pending review actions, PostgreSQL migrations, and process-local dedupe assumptions.
+
+---
+
 # Development Principles
 
 ChronoFlow follows strict engineering rules:

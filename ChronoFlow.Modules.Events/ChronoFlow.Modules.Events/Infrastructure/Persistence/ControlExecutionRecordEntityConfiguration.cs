@@ -21,10 +21,25 @@ public sealed class ControlExecutionRecordEntityConfiguration : IEntityTypeConfi
         builder.Property(x => x.ResolvedByUserId).HasMaxLength(200);
         builder.Property(x => x.ReopenedByUserId).HasMaxLength(200);
         builder.Property(x => x.RuleName).HasMaxLength(500);
+        builder.Property(x => x.CorrelationId).HasMaxLength(200);
 
         builder.Property(x => x.AdvisoryStrategyKey).HasMaxLength(100);
         builder.Property(x => x.AdvisoryConfidence).HasMaxLength(50);
         builder.Property(x => x.AdvisoryReasonSummary).HasMaxLength(500);
+        builder.Property(x => x.LinkedAilExecutionId).HasMaxLength(200);
+        builder.Property(x => x.InboundDecisionSummary).HasMaxLength(500);
+        builder.Property(x => x.InboundDecisionReferenceId).HasMaxLength(200);
+        builder.Property(x => x.InboundDecisionConfidence).HasMaxLength(50);
+        builder.Property(x => x.InboundDecisionReasonCode).HasMaxLength(100);
+        builder.Property(x => x.InboundLinkedExternalExecutionId).HasMaxLength(200);
+
+        builder.Property(x => x.OrchestrationPolicyOutcome).HasMaxLength(50);
+        builder.Property(x => x.PendingOperatorReview).IsRequired();
+
+        builder.Property(x => x.OccurredAtUtc);
+        builder.Property(x => x.OperatorReviewAction).HasMaxLength(30);
+        builder.Property(x => x.OperatorReviewActionAtUtc);
+        builder.Property(x => x.OperatorReviewNote).HasMaxLength(500);
 
         builder.Property(x => x.ReceivedAtUtc).IsRequired();
         builder.HasIndex(x => x.AlertId);
@@ -33,5 +48,6 @@ public sealed class ControlExecutionRecordEntityConfiguration : IEntityTypeConfi
         builder.HasIndex(x => x.WasExecuted);
         builder.HasIndex(x => x.WasSuppressed);
         builder.HasIndex(x => x.WorkflowKey);
+        builder.HasIndex(x => x.ExecutionInstanceId);
     }
 }
